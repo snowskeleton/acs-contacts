@@ -23,9 +23,16 @@ struct SingleContactView: View {
                 Text(errorMessage)
                     .foregroundColor(.red)
             } else {
+                HStack {
+                    HStack {
+                        ProfilePhoto(contact: contact)
+                        Text("\(contact.friendlyName ?? "Unknown")")
+                            .font(.title)
+                    }
+                    Spacer()
+                }
+                .padding()
                 List {
-                    Text("\(contact.friendlyName ?? "Unknown")")
-                    
                     if let dateOfBirth = contact.dateOfBirth, !dateOfBirth.isEmpty {
                         Section("Birthday") {
                             Text("Date of Birth: \(dateOfBirth)")

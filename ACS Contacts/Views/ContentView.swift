@@ -15,7 +15,7 @@ struct ContentView: View {
             Tab("Contacts", systemImage: "person.crop.circle") {
                 AllContactsView()
             }
-            Tab("Settigns", systemImage: "gear.circle") {
+            Tab("Settings", systemImage: "gear.circle") {
                 SettingsView()
             }
         }
