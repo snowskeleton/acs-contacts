@@ -12,6 +12,7 @@ struct LoginView: View {
     
     @AppStorage("loginEmail") var email = ""
     @AppStorage("loginPassword") var password = ""
+    @AppStorage("siteNumber") var siteNumber: String = ""
     
     @State private var alertErrorTitle: String = "Default error title"
     @State private var alertErrorMessage: String = "Default error message"
@@ -74,6 +75,7 @@ struct LoginView: View {
             case .success(let profile):
                 // Save the profile to UserManager or whatever is needed
                 UserManager.shared.updateProfile(from: profile, email: email, password: password)
+                siteNumber = profile.SiteNumber.description
                 mode.wrappedValue.dismiss()
             case .failure(let error):
                 print(error)

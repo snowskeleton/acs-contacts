@@ -13,7 +13,7 @@ struct ContentView: View {
     var body: some View {
         TabView {
             Tab("Contacts", systemImage: "person.crop.circle") {
-                ContactsView()
+                AllContactsView()
             }
             Tab("Settigns", systemImage: "gear.circle") {
                 SettingsView()

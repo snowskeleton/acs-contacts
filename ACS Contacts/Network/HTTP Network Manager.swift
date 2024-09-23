@@ -12,6 +12,7 @@ enum ACSEndpoint {
     case findByEmail(email: String, password: String)
     case login(siteNumber: String, username: String, password: String)
     case getContacts(siteNumber: String, pageIndex: Int)
+    case getIndividualContact(siteNumber: String, indvId: String)
 }
 
 extension ACSEndpoint: Endpoint {
@@ -23,6 +24,8 @@ extension ACSEndpoint: Endpoint {
             return "/api_accessacs_mobile/v2/\(siteNumber)/account"
         case .getContacts(let siteNumber, _):
             return "/api_accessacs_mobile/v2/\(siteNumber)/individuals/find"
+        case .getIndividualContact(let siteNumber, let indvId):
+            return "/api_accessacs_mobile/v2/\(siteNumber)/individuals/\(indvId)"
         }
     }
     
@@ -65,7 +68,15 @@ extension ACSEndpoint: Endpoint {
                 "AcsApplicationID": "E17686B7-C9B8-F34A-10E5-000D98A7CEE8",
                 "Content-Type": "application/json"
             ]
-        case .getContacts(_, _):
+        case .login(_, let username, let password):
+            let base64Credentials = "\(username):\(password)"
+                .data(using: .utf8)?
+                .base64EncodedString() ?? ""
+            return [
+                "Authorization": "Basic \(base64Credentials)",
+                "Content-Type": "application/json"
+            ]
+        default:
             guard let username = UserManager.shared.currentUser?.userName else {
                 return nil
             }
@@ -79,15 +90,6 @@ extension ACSEndpoint: Endpoint {
                 "Authorization": "Basic \(base64Credentials)",
                 "Content-Type": "application/json"
             ]
-        case .login(_, let username, let password):
-            let base64Credentials = "\(username):\(password)"
-                .data(using: .utf8)?
-                .base64EncodedString() ?? ""
-            return [
-                "Authorization": "Basic \(base64Credentials)",
-                "Content-Type": "application/json"
-            ]
-
         }
     }
     
@@ -109,6 +111,13 @@ protocol ACSServiceable {
 }
 
 struct ACSService: HTTPClient, ACSServiceable {
+    func getIndividualContact(siteNumber: String, indvId: String) async -> Result<IndividualContactResponse, RequestError> {
+        return await sendRequest(
+            endpoint: ACSEndpoint.getIndividualContact(siteNumber: siteNumber, indvId: indvId),
+            responseModel: IndividualContactResponse.self
+        )
+    }
+
     func getContacts(siteNumber: String, pageIndex: Int = 0) async -> Result<ContactList, RequestError> {
         return await sendRequest(endpoint: ACSEndpoint.getContacts(siteNumber: siteNumber, pageIndex: pageIndex), responseModel: ContactList.self)
     }
