@@ -7,9 +7,17 @@
 
 import SwiftUI
 import SwiftData
+import Aptabase
 
 @main
 struct ACS_ContactsApp: App {
+    init() {
+        Aptabase.shared.initialize(
+            appKey: AptabaseSecrets.appKey,
+            with: InitOptions(host: AptabaseSecrets.host)
+        )
+    }
+
     var body: some Scene {
         WindowGroup {
             ContentView()
