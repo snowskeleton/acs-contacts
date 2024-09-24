@@ -10,15 +10,14 @@ import SwiftData
 
 struct AllContactsView: View {
     @Environment(\.modelContext) private var context
-
+    
     @Query(sort: \Contact.lastName) var contacts: [Contact]
     @State private var searchText: String = ""
     var presentableContacts: [Contact] {
         searchText.isEmpty ?
         contacts :
         contacts.filter {
-            ($0.firstName ?? "").lowercased().contains(searchText.lowercased()) ||
-            ($0.lastName ?? "").lowercased().contains(searchText.lowercased())
+            $0.displayName.lowercased().contains(searchText.lowercased())
         }
     }
     
@@ -30,7 +29,7 @@ struct AllContactsView: View {
         NavigationStack {
             VStack {
                 Button("Fetch Contacts") { fetchContacts() }
-                List(presentableContacts, id: \.self) { contact in
+                List(presentableContacts, id: \.indvId) { contact in
                     NavigationLink {
                         SingleContactView(contact: contact)
                     } label: {
@@ -94,4 +93,5 @@ struct AllContactsView: View {
             alertErrorMessage = "Failed to save contacts."
             showAlert = true
         }
-    }}
+    }
+}
