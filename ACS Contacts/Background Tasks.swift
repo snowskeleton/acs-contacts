@@ -19,20 +19,16 @@ func scheduleAppRefresh() {
 
 @MainActor
 func fetchContactsInBackground() async {
-    switch await fetchContacts(onProgressUpdate: { _, _ in}) {
-    case .success(let contacts):
-        print("saving \(contacts.count) contacts")
+    switch await fetchContacts(onProgressUpdate: { _, _, contacts in
         for apiContact in contacts {
             let newContact = Contact.createOrUpdate(from: apiContact)
             SwiftDataManager.shared.container.mainContext.insert(newContact)
         }
-        
-        do {
-            try SwiftDataManager.shared.container.mainContext.save()
-        } catch {
-            print("Failed to save contacts: \(error)")
-        }
-
+    }) {
+    case .success(let contacts):
+        try? SwiftDataManager.shared.container.mainContext.save()
+        print("saving \(contacts.count) contacts")
+        UserDefaults.standard.set(true, forKey: "completedInitialDownload")
     case .failure(let error):
         print("Failed to save contacts: \(error)")
     }

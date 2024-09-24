@@ -83,18 +83,19 @@ struct AllContactsView: View {
         Task {
             showProgressView = true
             
-            let result = await fetchContacts { currentProgress, totalProgress in
+            let result = await fetchContacts { currentProgress, totalProgress, contacts in
                 progressViewProgress = currentProgress
                 progressViewGoal = totalProgress
+                for apiContact in contacts {
+                    let newContact = Contact.createOrUpdate(from: apiContact)
+                    SwiftDataManager.shared.container.mainContext.insert(newContact)
+                }
             }
             
             switch result {
             case .success(let contacts):
                 print("success! we have \(contacts.count) objects")
-                for apiContact in contacts {
-                    let newContact = Contact.createOrUpdate(from: apiContact)
-                    SwiftDataManager.shared.container.mainContext.insert(newContact)
-                }
+                try? SwiftDataManager.shared.container.mainContext.save()
             case .failure(let error):
                 print(error)
                 alertErrorTitle = "Fetch Error"
@@ -107,7 +108,7 @@ struct AllContactsView: View {
     }}
 
 func fetchContacts(
-    onProgressUpdate: @escaping (_ current: Double, _ total: Double) -> Void
+    onProgressUpdate: @escaping (_ current: Double, _ total: Double, _ contacts: [ContactList.Contact]) -> Void
 ) async -> Result<[ContactList.Contact], RequestError> {
     guard let siteNumber = UserManager.shared.currentUser?.siteNumber else {
         return .failure(RequestError.custom("No site number"))
@@ -133,8 +134,7 @@ func fetchContacts(
             totalPages = contactsResponse.PageCount
             pageIndex += 1
             
-            onProgressUpdate(Double(pageIndex * pageSize), Double(totalPages * pageSize))
-            
+            onProgressUpdate(Double(pageIndex * pageSize), Double(totalPages * pageSize), contactsResponse.Page)
         case .failure(let error):
             return .failure(error)
         }
