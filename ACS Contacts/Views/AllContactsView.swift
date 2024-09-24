@@ -25,9 +25,17 @@ struct AllContactsView: View {
     @State private var alertErrorMessage: String = "Default error message"
     @State private var showAlert: Bool = false
     
+    @State private var showProgressView: Bool = false
+    @State private var progressViewProgress: Double = 0
+    @State private var progressViewGoal: Double = 0
+    
     var body: some View {
         NavigationStack {
             VStack {
+                if showProgressView {
+                    ProgressView(value: progressViewProgress, total: progressViewGoal)
+                        .progressViewStyle(.linear)
+                }
                 Button("Fetch Contacts") { fetchContacts() }
                 List(presentableContacts, id: \.indvId) { contact in
                     NavigationLink {
@@ -52,6 +60,7 @@ struct AllContactsView: View {
     
     fileprivate func fetchContacts() {
         Task {
+            showProgressView = true
             // Assume `siteNumber` is saved in the UserManager from login
             guard let siteNumber = UserManager.shared.currentUser?.siteNumber else { return }
             
@@ -69,6 +78,9 @@ struct AllContactsView: View {
                     
                     pageIndex += 1
                     
+                    progressViewGoal  = Double(contactsResponse.PageCount * contactsResponse.PageSize)
+                    progressViewProgress = Double(pageIndex * contactsResponse.PageSize)
+                    
                 case .failure(let error):
                     print(error)
                     alertErrorTitle = "Failed to Fetch Contacts"
@@ -77,6 +89,7 @@ struct AllContactsView: View {
                     return
                 }
             }
+            showProgressView = false
         }
     }
     private func saveContactsToModelContext(_ contacts: [ContactList.Contact]) async {
