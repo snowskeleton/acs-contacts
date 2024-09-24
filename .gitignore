@@ -1,0 +1,4 @@
+.DS_Store
+OSTRich.xcodeproj/project.xcworkspace/xcuserdata/
+!xcuserdata/**/xcschemes/*
+*/Secrets.swift*
