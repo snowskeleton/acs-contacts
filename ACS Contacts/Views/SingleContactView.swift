@@ -96,6 +96,20 @@ struct SingleContactView: View {
                         }
                     }
                 }
+                
+                if !contact.familyMembers.isEmpty {
+                    Section("Family Member\(contact.familyMembers.count > 1 ? "s" : "")") {
+                        ForEach(contact.familyMembers, id: \.self) { familyMember in
+                            if familyMember != contact {
+                                NavigationLink {
+                                    SingleContactView(contact: familyMember)
+                                } label: {
+                                    Text(familyMember.displayName)
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
         .onAppear {
@@ -149,12 +163,37 @@ struct SingleContactView: View {
             $0.phoneNumber != nil
         }.map {
             CNLabeledValue(
-                label: $0.phoneType != nil ? $0.phoneType : "mobile",
+                label: $0.phoneType != nil ? $0.phoneType : CNLabelPhoneNumberMobile,
                 value: CNPhoneNumber(stringValue: $0.phoneNumber!)
             )
         }
-        //        saveableContact.postalAddresses =
         
+        saveableContact.postalAddresses = contact.addresses.filter {
+            $0.addressLine1 != nil
+        }.map { address in
+            let postalAddress = CNMutablePostalAddress()
+            
+            postalAddress.street = [address.addressLine1, address.addressLine2].compactMap { $0 }.joined(separator: "\n")
+            postalAddress.city = address.city ?? ""
+            postalAddress.state = address.state ?? ""
+            postalAddress.postalCode = address.zipcode ?? ""
+            postalAddress.country = address.country ?? ""
+            
+            return CNLabeledValue(
+                label: address.addrType ?? CNLabelHome,
+                value: postalAddress
+            )
+        }
+        
+        saveableContact.emailAddresses = contact.emails.filter {
+            $0.email != nil
+        }.map { email in
+            CNLabeledValue(
+                label: email.emailType ?? CNLabelHome,
+                value: email.email! as NSString
+            )
+        }
+
         let saveRequest = CNSaveRequest()
         saveRequest.add(saveableContact, toContainerWithIdentifier: nil)
         try? store.execute(saveRequest)

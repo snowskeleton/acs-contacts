@@ -35,6 +35,16 @@ class Contact: Identifiable {
     var emails: [Email] = []
     var phones: [Phone] = []
     
+    @MainActor
+    var familyMembers: [Contact] {
+        let fetchDescriptor = FetchDescriptor<Contact>(
+            predicate: #Predicate<Contact> { $0.famId == famId }
+        )
+        let context = SwiftDataManager.shared.container.mainContext
+        let contacts = try? context.fetch(fetchDescriptor)
+        return (contacts ?? []).filter { $0.indvId != indvId }.sorted { $0.displayName < $1.displayName }
+    }
+    
     var displayName: String {
         if let name = friendlyName, !name.isEmpty {
             return name
