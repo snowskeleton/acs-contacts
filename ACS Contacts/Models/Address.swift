@@ -26,6 +26,28 @@ class Address: Identifiable {
     var zipcode: String?
     var cityStateZip: String?
     
+    var addressString: String {
+        var starterString = ""
+        if let line1 = addressLine1, !line1.isEmpty {
+            starterString += "\(line1)"
+        }
+        
+        if let line2 = addressLine2, !line2.isEmpty {
+            starterString += "\n\(line2)"
+        }
+        
+        if let cityStateZip = cityStateZip, !cityStateZip.isEmpty {
+            starterString += "\n\(cityStateZip)"
+        }
+        
+        if let country = country, !country.isEmpty {
+            starterString += "\n\(country)"
+        }
+        
+        return starterString
+    }
+
+    
     init(
         addrId: Int,
         addrTypeId: Int?,

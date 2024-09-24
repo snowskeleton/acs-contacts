@@ -83,6 +83,7 @@ struct AllContactsView: View {
     private func saveContactsToModelContext(_ contacts: [ContactList.Contact]) async {
         for apiContact in contacts {
             let newContact = Contact.createOrUpdate(from: apiContact)
+            context.insert(newContact)
         }
         
         do {

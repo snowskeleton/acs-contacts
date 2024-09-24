@@ -17,6 +17,10 @@ class Phone: Identifiable {
     var preferred: Bool?
     var phoneNumber: String?
     var listed: Bool?
+    var familyPhone: Bool?
+    var phoneExtension: String?
+    var addrPhone: Bool?
+    var phoneRef: String?
     
     init(
         phoneId: Int,
@@ -24,7 +28,11 @@ class Phone: Identifiable {
         phoneTypeId: Int?,
         preferred: Bool?,
         phoneNumber: String?,
-        listed: Bool?
+        listed: Bool?,
+        familyPhone: Bool?,
+        phoneExtension: String?,
+        addrPhone: Bool?,
+        phoneRef: String?
     ) {
         self.phoneId = phoneId
         self.phoneType = phoneType
@@ -32,6 +40,10 @@ class Phone: Identifiable {
         self.preferred = preferred
         self.phoneNumber = phoneNumber
         self.listed = listed
+        self.familyPhone = familyPhone
+        self.phoneExtension = phoneExtension
+        self.addrPhone = addrPhone
+        self.phoneRef = phoneRef
     }
     
     init(from apiResponse: IndividualContactResponse.Phone) {
@@ -41,6 +53,10 @@ class Phone: Identifiable {
         self.preferred = apiResponse.Preferred
         self.phoneNumber = apiResponse.PhoneNumber
         self.listed = apiResponse.Listed
+        self.familyPhone = familyPhone
+        self.phoneExtension = phoneExtension
+        self.addrPhone = addrPhone
+        self.phoneRef = phoneRef
     }
     
     func update(with apiResponse: IndividualContactResponse.Phone) {
@@ -50,6 +66,10 @@ class Phone: Identifiable {
         self.preferred = apiResponse.Preferred
         self.phoneNumber = apiResponse.PhoneNumber
         self.listed = apiResponse.Listed
+        self.familyPhone = familyPhone
+        self.phoneExtension = phoneExtension
+        self.addrPhone = addrPhone
+        self.phoneRef = phoneRef
     }
     
     @MainActor static func createOrUpdate(

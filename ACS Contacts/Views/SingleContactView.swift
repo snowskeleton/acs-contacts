@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import ContactsUI
 
 struct SingleContactView: View {
     @State var contact: Contact
@@ -14,68 +15,82 @@ struct SingleContactView: View {
     @State private var isLoading = false
     
     @AppStorage("siteNumber") var siteNumber: String = ""
+    @State private var addedContact = false
+    
+    @State private var alertAlertTitle: String = "Default error title"
+    @State private var alertAlertMessage: String = "Default error message"
+    @State private var showAlert: Bool = false
+    
+    @State private var showProgressView: Bool = false
 
     var body: some View {
         VStack {
-            if isLoading {
-                ProgressView("Loading contact...")
-            } else if let errorMessage = errorMessage {
-                Text(errorMessage)
-                    .foregroundColor(.red)
-            } else {
-                HStack {
-                    HStack {
-                        ProfilePhoto(contact: contact)
-                        Text("\(contact.friendlyName ?? "Unknown")")
-                            .font(.title)
-                    }
-                    Spacer()
+            HStack {
+                ProfilePhoto(contact: contact)
+                Text(contact.displayName)
+                    .font(.title)
+                Spacer()
+                Button {
+                    addContact()
+                } label: {
+                    Image(systemName:
+                            addedContact
+                          ? "person.crop.circle.fill.badge.checkmark"
+                          : "person.crop.circle.fill.badge.plus"
+                    )
+                    .font(.title)
                 }
-                .padding()
-                List {
-                    if let dateOfBirth = contact.dateOfBirth, !dateOfBirth.isEmpty {
-                        Section("Birthday") {
-                            Text("Date of Birth: \(dateOfBirth)")
-                        }
+            }
+            .padding()
+            List {
+                if let dateOfBirth = contact.dateOfBirth, !dateOfBirth.isEmpty {
+                    Section("Birthday") {
+                        Text("Date of Birth: \(dateOfBirth)")
                     }
-                    
-                    if !contact.phones.isEmpty {
-                        Section("Phone\(contact.phones.count > 1 ? "s" : "")") {
-                            ForEach(contact.phones, id: \.self) { phone in
-                                HStack {
-                                    Text(phone.phoneNumber ?? "Unknown")
-                                    Spacer()
-                                    if phone.preferred == true && contact.phones.count > 1 {
-                                        Image(systemName: "checkmark")
+                }
+                
+                if !contact.phones.isEmpty {
+                    Section("Phone\(contact.phones.count > 1 ? "s" : "")") {
+                        ForEach(contact.phones, id: \.self) { phone in
+                            if let number = phone.phoneNumber {
+                                Button {
+                                    UIPasteboard.general.string = number
+                                } label: {
+                                    HStack {
+                                        Text(number)
+                                        Spacer()
+                                        if phone.preferred == true && contact.phones.count > 1 {
+                                            Image(systemName: "checkmark")
+                                        }
                                     }
                                 }
                             }
                         }
                     }
-                    
-                    if !contact.addresses.isEmpty {
-                        Section("Address\(contact.addresses.count > 1 ? "es" : "")") {
-                            ForEach(contact.addresses, id: \.self) { address in
-                                HStack {
-                                    AddressTextView(address: address)
-                                    Spacer()
-                                    if address.activeAddress == true && contact.addresses.count > 1 {
-                                        Image(systemName: "checkmark")
-                                    }
+                }
+                
+                if !contact.addresses.isEmpty {
+                    Section("Address\(contact.addresses.count > 1 ? "es" : "")") {
+                        ForEach(contact.addresses, id: \.self) { address in
+                            HStack {
+                                Text(address.addressString)
+                                Spacer()
+                                if address.activeAddress == true && contact.addresses.count > 1 {
+                                    Image(systemName: "checkmark")
                                 }
                             }
                         }
                     }
-                    
-                    if !contact.emails.isEmpty {
-                        Section("Email\(contact.emails.count > 1 ? "s" : "")") {
-                            ForEach(contact.emails, id: \.self) { email in
-                                HStack {
-                                    Text(email.email ?? "Unknown")
-                                    Spacer()
-                                    if email.preferred == true && contact.emails.count > 1 {
-                                        Image(systemName: "checkmark")
-                                    }
+                }
+                
+                if !contact.emails.isEmpty {
+                    Section("Email\(contact.emails.count > 1 ? "s" : "")") {
+                        ForEach(contact.emails, id: \.self) { email in
+                            HStack {
+                                Text(email.email ?? "Unknown")
+                                Spacer()
+                                if email.preferred == true && contact.emails.count > 1 {
+                                    Image(systemName: "checkmark")
                                 }
                             }
                         }
@@ -86,11 +101,22 @@ struct SingleContactView: View {
         .onAppear {
             fetchContact()
         }
+        .overlay {
+            if showProgressView {
+                ProgressView()
+            }
+        }
+        .alert(isPresented: $showAlert) {
+            Alert(
+                title: Text(alertAlertTitle),
+                message: Text(alertAlertMessage)
+            )
+        }
         .navigationTitle("Contact Details")
     }
     
     private func fetchContact() {
-        isLoading = true
+        showProgressView = true
         Task {
             let result = await ACSService().getIndividualContact(siteNumber: siteNumber, indvId: contact.indvId.description)
             
@@ -98,38 +124,43 @@ struct SingleContactView: View {
             case .success(let contactResponse):
                 contact = Contact.createOrUpdate(from: contactResponse)
             case .failure(let error):
-                self.errorMessage = "Failed to fetch contact: \(error.customMessage)"
+                alertAlertTitle = "Failed to fetch contact"
+                alertAlertMessage = error.customMessage
+                showAlert = true
             }
             
-            isLoading = false
+            showProgressView = false
         }
-    }
-}
-
-struct AddressTextView: View {
-    var address: Address
-    var addressString: String {
-        var starterString = ""
-        if let line1 = address.addressLine1, !line1.isEmpty {
-            starterString += "\(line1)"
-        }
-        
-        if let line2 = address.addressLine2, !line2.isEmpty {
-            starterString += "\n\(line2)"
-        }
-        
-        if let cityStateZip = address.cityStateZip, !cityStateZip.isEmpty {
-            starterString += "\n\(cityStateZip)"
-        }
-        
-        if let country = address.country, !country.isEmpty {
-            starterString += "\n\(country)"
-        }
-        
-        return starterString
     }
     
-    var body: some View {
-        Text(addressString)
+    private func addContact() {
+        withAnimation {
+            addedContact = true
+        }
+        
+        let store = CNContactStore()
+        let saveableContact = CNMutableContact()
+        
+        saveableContact.givenName = contact.firstName ?? ""
+        saveableContact.middleName = contact.middleName ?? ""
+        saveableContact.familyName = contact.lastName ?? ""
+        
+        saveableContact.phoneNumbers = contact.phones.filter {
+            $0.phoneNumber != nil
+        }.map {
+            CNLabeledValue(
+                label: $0.phoneType != nil ? $0.phoneType : "mobile",
+                value: CNPhoneNumber(stringValue: $0.phoneNumber!)
+            )
+        }
+        //        saveableContact.postalAddresses =
+        
+        let saveRequest = CNSaveRequest()
+        saveRequest.add(saveableContact, toContainerWithIdentifier: nil)
+        try? store.execute(saveRequest)
+        
+        alertAlertTitle = "Contact Saved!"
+        alertAlertMessage = ""
+        showAlert = true
     }
 }
