@@ -33,16 +33,29 @@ struct AllContactsView: View {
         NavigationStack {
             VStack {
                 if showProgressView {
-                    ProgressView(value: progressViewProgress, total: progressViewGoal)
+                    ProgressView(
+                        value: progressViewProgress,
+                        total: progressViewGoal,
+                        label: {
+                            HStack {
+                                Spacer()
+                                Text("Downloading Contacts...")
+                                Spacer()
+                            }
+                        },
+                        currentValueLabel: { Text("\(Int(progressViewProgress)) / \(Int(progressViewGoal))")}
+                    )
                         .progressViewStyle(.linear)
                 }
-                Button("Fetch Contacts") { fetchContacts() }
                 List(presentableContacts, id: \.indvId) { contact in
                     NavigationLink {
                         SingleContactView(contact: contact)
                     } label: {
                         Text(contact.displayName)
                     }
+                }
+                .refreshable {
+                    fetchContacts()
                 }
                 .searchable(text: $searchText)
                 .onAppear { fetchContacts() }
@@ -60,10 +73,13 @@ struct AllContactsView: View {
     
     fileprivate func fetchContacts() {
         Task {
-            showProgressView = true
             // Assume `siteNumber` is saved in the UserManager from login
-            guard let siteNumber = UserManager.shared.currentUser?.siteNumber else { return }
+            guard let siteNumber = UserManager.shared.currentUser?.siteNumber else {
+                print("we failed")
+                return
+            }
             
+            showProgressView = true
             var pageIndex = 0
             var totalPages = Int.max
             

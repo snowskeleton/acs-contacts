@@ -19,16 +19,14 @@ class UserManager: ObservableObject {
     }
 
     func loadUser() {
-        DispatchQueue.main.async {
-            guard
-                let userData = UserDefaults.standard.data(forKey: self.userDefaultsKey),
-                let user = try? JSONDecoder().decode(User.self, from: userData)
-            else {
-                self.currentUser = User()
-                return
-            }
-            self.currentUser = user
+        guard
+            let userData = UserDefaults.standard.data(forKey: self.userDefaultsKey),
+            let user = try? JSONDecoder().decode(User.self, from: userData)
+        else {
+            self.currentUser = User()
+            return
         }
+        self.currentUser = user
     }
 
     func saveUser() {
@@ -38,11 +36,9 @@ class UserManager: ObservableObject {
     }
     
     func saveUser(_ user: User) {
-        DispatchQueue.main.async {
-            guard let userData = try? JSONEncoder().encode(user) else { return }
-            UserDefaults.standard.set(userData, forKey: self.userDefaultsKey)
-            self.currentUser = user
-        }
+        guard let userData = try? JSONEncoder().encode(user) else { return }
+        UserDefaults.standard.set(userData, forKey: self.userDefaultsKey)
+        self.currentUser = user
     }
     
     func updateProfile(from profile: SiteProfile.Response, email: String, password: String) {
