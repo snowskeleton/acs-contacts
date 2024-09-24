@@ -11,7 +11,7 @@ import SwiftUI
 enum ACSEndpoint {
     case findByEmail(email: String, password: String)
     case login(siteNumber: String, username: String, password: String)
-    case getContacts(siteNumber: String, pageIndex: Int)
+    case getContacts(siteNumber: String, pageIndex: Int, pageSize: Int = 50)
     case getIndividualContact(siteNumber: String, indvId: String)
 }
 
@@ -22,7 +22,7 @@ extension ACSEndpoint: Endpoint {
             return "/api_accessacs_mobile/v2/accounts/findbyemail"
         case .login(let siteNumber, _, _):
             return "/api_accessacs_mobile/v2/\(siteNumber)/account"
-        case .getContacts(let siteNumber, _):
+        case .getContacts(let siteNumber, _, _):
             return "/api_accessacs_mobile/v2/\(siteNumber)/individuals/find"
         case .getIndividualContact(let siteNumber, let indvId):
             return "/api_accessacs_mobile/v2/\(siteNumber)/individuals/\(indvId)"
@@ -31,9 +31,7 @@ extension ACSEndpoint: Endpoint {
     
     var queryItems: [URLQueryItem]? {
         switch self {
-        case .getContacts(_, let pageIndex):
-            var pageSize = UserDefaults.standard.integer(forKey: "fetchContactsPageSize")
-            if pageSize == 0 { pageSize = 50 }
+        case .getContacts(_, let pageIndex, let pageSize):
             return [
                 URLQueryItem(name: "q", value: "%"), // Use %25 for the percent character
                 URLQueryItem(name: "pageIndex", value: "\(pageIndex)"),
@@ -118,8 +116,8 @@ struct ACSService: HTTPClient, ACSServiceable {
         )
     }
 
-    func getContacts(siteNumber: String, pageIndex: Int = 0) async -> Result<ContactList, RequestError> {
-        return await sendRequest(endpoint: ACSEndpoint.getContacts(siteNumber: siteNumber, pageIndex: pageIndex), responseModel: ContactList.self)
+    func getContacts(siteNumber: String, pageIndex: Int = 0, pageSize: Int = 50) async -> Result<ContactList, RequestError> {
+        return await sendRequest(endpoint: ACSEndpoint.getContacts(siteNumber: siteNumber, pageIndex: pageIndex, pageSize: pageSize), responseModel: ContactList.self)
     }
     
     func login(_ email: String, _ password: String) async -> Result<SiteProfile.Response, RequestError> {

@@ -14,6 +14,7 @@ struct DeveloperMenuView: View {
     @State private var showCrashConfirmation = false
 
     @AppStorage("fetchContactsPageSize") var pageSize = "50"
+    @AppStorage("completedInitialDownload") var contactsDownloaded = false
 
     var body: some View {
         List {
@@ -33,7 +34,10 @@ struct DeveloperMenuView: View {
                                     fatalError()
                                 }
                         }
-                Button("Drop all tables", role: .destructive) { try? ModelContainer().deleteAllData() }
+                Button("Drop all tables", role: .destructive) {
+                    try? ModelContainer().deleteAllData()
+                    contactsDownloaded = false
+                }
             }
             
         }

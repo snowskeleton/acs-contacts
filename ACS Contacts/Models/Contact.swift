@@ -12,7 +12,7 @@ import SwiftData
 class Contact: Identifiable {
     @Attribute(.unique)
     var indvId: Int
-    var famId: Int
+    var famId: Int?
     var familyPosition: String?
     var title: String?
     var firstName: String?
@@ -28,8 +28,8 @@ class Contact: Identifiable {
     var familyPictureUrl: String?
     var dateOfBirth: String?
     var memberStatus: String?
-    var userIsLeaderOf: Bool = false
-    var isCRPending: Bool = false
+    var userIsLeaderOf: Bool?
+    var isCRPending: Bool?
     
     var addresses: [Address] = []
     var emails: [Email] = []
@@ -103,7 +103,7 @@ class Contact: Identifiable {
     
     init(from apiResponse: ContactList.Contact) {
         self.indvId = apiResponse.IndvId
-        self.famId = apiResponse.FamId
+        self.famId = apiResponse.FamId ?? apiResponse.PrimFamily
         self.familyPosition = apiResponse.FamilyPosition
         self.title = apiResponse.Title
         self.firstName = apiResponse.FirstName
@@ -142,7 +142,7 @@ class Contact: Identifiable {
     
     func update(with apiResponse: ContactList.Contact) {
         self.indvId = apiResponse.IndvId
-        self.famId = apiResponse.FamId
+        self.famId = apiResponse.FamId ?? apiResponse.PrimFamily
         self.familyPosition = apiResponse.FamilyPosition
         self.title = apiResponse.Title
         self.firstName = apiResponse.FirstName

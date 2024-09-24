@@ -29,6 +29,8 @@ struct AllContactsView: View {
     @State private var progressViewProgress: Double = 0
     @State private var progressViewGoal: Double = 0
     
+    @AppStorage("completedInitialDownload") var contactsDownloaded = false
+
     var body: some View {
         NavigationStack {
             VStack {
@@ -55,10 +57,10 @@ struct AllContactsView: View {
                     }
                 }
                 .refreshable {
-                    fetchContacts()
+                    saveContactsToModelContext()
                 }
                 .searchable(text: $searchText)
-                .onAppear { fetchContacts() }
+                .onAppear { gatedFetchContacts() }
             }
             .alert(isPresented: $showAlert) {
                 Alert(
@@ -71,56 +73,71 @@ struct AllContactsView: View {
         }
     }
     
-    fileprivate func fetchContacts() {
+    fileprivate func gatedFetchContacts() {
+        guard !contactsDownloaded else { return }
+        saveContactsToModelContext()
+        contactsDownloaded = true
+    }
+    
+    private func saveContactsToModelContext() {
         Task {
-            // Assume `siteNumber` is saved in the UserManager from login
-            guard let siteNumber = UserManager.shared.currentUser?.siteNumber else {
-                print("we failed")
-                return
-            }
-            
             showProgressView = true
-            var pageIndex = 0
-            var totalPages = Int.max
             
-            while pageIndex < totalPages {
-                let contactsResult = await ACSService().getContacts(siteNumber: siteNumber, pageIndex: pageIndex)
-                
-                switch contactsResult {
-                case .success(let contactsResponse):
-                    await saveContactsToModelContext(contactsResponse.Page)
-                    
-                    totalPages = contactsResponse.PageCount
-                    
-                    pageIndex += 1
-                    
-                    progressViewGoal  = Double(contactsResponse.PageCount * contactsResponse.PageSize)
-                    progressViewProgress = Double(pageIndex * contactsResponse.PageSize)
-                    
-                case .failure(let error):
-                    print(error)
-                    alertErrorTitle = "Failed to Fetch Contacts"
-                    alertErrorMessage = error.customMessage
-                    showAlert = true
-                    return
-                }
+            let result = await fetchContacts { currentProgress, totalProgress in
+                progressViewProgress = currentProgress
+                progressViewGoal = totalProgress
             }
+            
+            switch result {
+            case .success(let contacts):
+                print("success! we have \(contacts.count) objects")
+                for apiContact in contacts {
+                    let newContact = Contact.createOrUpdate(from: apiContact)
+                    SwiftDataManager.shared.container.mainContext.insert(newContact)
+                }
+            case .failure(let error):
+                print(error)
+                alertErrorTitle = "Fetch Error"
+                alertErrorMessage = "Failed to Fetch Contacts.\n\(error.customMessage)"
+                showAlert = true
+            }
+            
             showProgressView = false
         }
+    }}
+
+func fetchContacts(
+    onProgressUpdate: @escaping (_ current: Double, _ total: Double) -> Void
+) async -> Result<[ContactList.Contact], RequestError> {
+    guard let siteNumber = UserManager.shared.currentUser?.siteNumber else {
+        return .failure(RequestError.custom("No site number"))
     }
-    private func saveContactsToModelContext(_ contacts: [ContactList.Contact]) async {
-        for apiContact in contacts {
-            let newContact = Contact.createOrUpdate(from: apiContact)
-            context.insert(newContact)
-        }
+    
+    var pageSize = UserDefaults.standard.integer(forKey: "fetchContactsPageSize")
+    if pageSize == 0 { pageSize = 50 }
+    
+    var pageIndex = 0
+    var totalPages = Int.max
+    var contacts: [ContactList.Contact] = []
+    
+    while pageIndex < totalPages {
+        let contactsResult = await ACSService().getContacts(
+            siteNumber: siteNumber,
+            pageIndex: pageIndex,
+            pageSize: pageSize
+        )
         
-        do {
-            try context.save()
-        } catch {
-            print("Failed to save contacts: \(error)")
-            alertErrorTitle = "Save Error"
-            alertErrorMessage = "Failed to save contacts."
-            showAlert = true
+        switch contactsResult {
+        case .success(let contactsResponse):
+            contacts.append(contentsOf: contactsResponse.Page)
+            totalPages = contactsResponse.PageCount
+            pageIndex += 1
+            
+            onProgressUpdate(Double(pageIndex * pageSize), Double(totalPages * pageSize))
+            
+        case .failure(let error):
+            return .failure(error)
         }
     }
+    return .success(contacts)
 }

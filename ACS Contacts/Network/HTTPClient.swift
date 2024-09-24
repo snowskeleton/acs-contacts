@@ -59,7 +59,7 @@ enum RequestError: Error {
     case notImplemented
     case serviceUnavailable
     case gatewayTimeout
-
+    case custom(_ message: String)
 
     case emailInUse
     case ageRestriction
@@ -76,6 +76,8 @@ enum RequestError: Error {
             return "Bad gateway. ACS server is down."
         case .tooManyRequests:
             return "Too many requests. Please try again later."
+        case .custom(let message):
+            return message
         default:
             return "Unknown error: \(self)"
         }

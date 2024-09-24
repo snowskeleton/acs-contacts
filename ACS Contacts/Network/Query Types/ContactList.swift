@@ -16,7 +16,8 @@ struct ContactList: Codable {
     
     struct Contact: Codable {
         let IndvId: Int
-        let FamId: Int
+        let FamId: Int?
+        let PrimFamily: Int?
         let FamilyPosition: String?
         let Title: String?
         let FirstName: String?

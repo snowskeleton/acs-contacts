@@ -11,6 +11,7 @@ import Aptabase
 
 @main
 struct ACS_ContactsApp: App {
+    @Environment(\.scenePhase) private var phase
     init() {
         Aptabase.shared.initialize(
             appKey: AptabaseSecrets.appKey,
@@ -21,6 +22,14 @@ struct ACS_ContactsApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+        }
+        .onChange(of: phase) { _, newPhase in
+            if newPhase == .background {
+                scheduleAppRefresh()
+            }
+        }
+        .backgroundTask(.appRefresh("contactListDownload")) {
+            await fetchContactsInBackground()
         }
         .modelContainer(SwiftDataManager.shared.container)
     }
