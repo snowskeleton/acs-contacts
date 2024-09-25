@@ -20,9 +20,11 @@ func scheduleAppRefresh() {
 @MainActor
 func fetchContactsInBackground() async {
     switch await fetchContacts(onProgressUpdate: { _, _, contacts in
-        for apiContact in contacts {
-            let newContact = Contact.createOrUpdate(from: apiContact)
-            SwiftDataManager.shared.container.mainContext.insert(newContact)
+        Task.detached {
+            for apiContact in contacts {
+                let actor = SwiftDataActor(modelContainer: SwiftDataManager.shared.container)
+                await actor.createContact(apiContact)
+            }
         }
     }) {
     case .success(let contacts):

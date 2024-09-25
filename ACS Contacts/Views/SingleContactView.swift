@@ -26,7 +26,9 @@ struct SingleContactView: View {
     var body: some View {
         VStack {
             HStack {
-                ProfilePhoto(contact: contact)
+                if !(contact.pictureUrl ?? "").isEmpty {
+                    ProfilePhoto(contact: contact)
+                }
                 Text(contact.displayName)
                     .font(.title)
                 Spacer()
