@@ -13,7 +13,7 @@ struct DeveloperMenuView: View {
 
     @State private var showCrashConfirmation = false
 
-    @AppStorage("fetchContactsPageSize") var pageSize = "50"
+    @AppStorage("fetchContactsPageSize") var pageSize = "500"
     @AppStorage("completedInitialDownload") var contactsDownloaded = false
 
     var body: some View {

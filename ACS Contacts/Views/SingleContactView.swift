@@ -136,7 +136,10 @@ struct SingleContactView: View {
             
             switch result {
             case .success(let contactResponse):
-                contact = Contact.createOrUpdate(from: contactResponse)
+                Task.detached {
+                    let actor = SwiftDataActor(modelContainer: SwiftDataManager.shared.container)
+                    await actor.createContact(contactResponse)
+                }
             case .failure(let error):
                 alertAlertTitle = "Failed to fetch contact"
                 alertAlertMessage = error.customMessage

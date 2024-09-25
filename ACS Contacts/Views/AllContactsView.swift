@@ -30,7 +30,7 @@ struct AllContactsView: View {
     @State private var progressViewGoal: Double = 0
     
     @AppStorage("completedInitialDownload") var contactsDownloaded = false
-
+    
     var body: some View {
         NavigationStack {
             VStack {
@@ -47,7 +47,7 @@ struct AllContactsView: View {
                         },
                         currentValueLabel: { Text("\(Int(progressViewProgress)) / \(Int(progressViewGoal))")}
                     )
-                        .progressViewStyle(.linear)
+                    .progressViewStyle(.linear)
                 }
                 List(presentableContacts, id: \.indvId) { contact in
                     NavigationLink {
@@ -86,16 +86,17 @@ struct AllContactsView: View {
             let result = await fetchContacts { currentProgress, totalProgress, contacts in
                 progressViewProgress = currentProgress
                 progressViewGoal = totalProgress
-                for apiContact in contacts {
-                    let newContact = Contact.createOrUpdate(from: apiContact)
-                    SwiftDataManager.shared.container.mainContext.insert(newContact)
+                Task.detached {
+                    for apiContact in contacts {
+                        let actor = SwiftDataActor(modelContainer: SwiftDataManager.shared.container)
+                        await actor.createContact(apiContact)
+                    }
                 }
             }
             
             switch result {
             case .success(let contacts):
                 print("success! we have \(contacts.count) objects")
-                try? SwiftDataManager.shared.container.mainContext.save()
             case .failure(let error):
                 print(error)
                 alertErrorTitle = "Fetch Error"
@@ -105,7 +106,8 @@ struct AllContactsView: View {
             
             showProgressView = false
         }
-    }}
+    }
+}
 
 func fetchContacts(
     onProgressUpdate: @escaping (_ current: Double, _ total: Double, _ contacts: [ContactList.Contact]) -> Void
@@ -115,7 +117,7 @@ func fetchContacts(
     }
     
     var pageSize = UserDefaults.standard.integer(forKey: "fetchContactsPageSize")
-    if pageSize == 0 { pageSize = 50 }
+    if pageSize == 0 { pageSize = 500 }
     
     var pageIndex = 0
     var totalPages = Int.max

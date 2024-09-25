@@ -9,6 +9,10 @@ import SwiftUI
 
 struct LoginView: View {
     @Environment(\.presentationMode) var mode
+    @State private var loggedIn = false
+    @State private var showLogoutSuccessful = false
+    
+    @ObservedObject private var userManager = UserManager.shared
     
     @AppStorage("loginEmail") var email = ""
     @AppStorage("loginPassword") var password = ""
@@ -44,6 +48,22 @@ struct LoginView: View {
                         )
                     }
             }
+            
+            if loggedIn {
+                HStack {
+                    Image(systemName: "arrow.left.circle")
+                    Button("Logout", role: .destructive) {
+                        logout()
+                    }
+                }
+                .alert(isPresented: $showLogoutSuccessful) {
+                    Alert(
+                        title: Text("Logout Successful!"),
+                        message: Text("Please login to continue using this app")
+                    )
+                }
+            }
+
             
             //            Section {
             //                if email.lowercased() == AppStoreTesting.testString {
@@ -85,5 +105,12 @@ struct LoginView: View {
             }
             showProgressView = false
         }
+    }
+
+    private func logout() {
+        UserManager.shared.logout()
+        email = ""
+        password = ""
+        showLogoutSuccessful = true
     }
 }

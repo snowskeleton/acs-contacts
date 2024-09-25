@@ -11,7 +11,7 @@ import SwiftUI
 enum ACSEndpoint {
     case findByEmail(email: String, password: String)
     case login(siteNumber: String, username: String, password: String)
-    case getContacts(siteNumber: String, pageIndex: Int, pageSize: Int = 50)
+    case getContacts(siteNumber: String, pageIndex: Int, pageSize: Int = 500)
     case getIndividualContact(siteNumber: String, indvId: String)
 }
 
@@ -116,7 +116,7 @@ struct ACSService: HTTPClient, ACSServiceable {
         )
     }
 
-    func getContacts(siteNumber: String, pageIndex: Int = 0, pageSize: Int = 50) async -> Result<ContactList, RequestError> {
+    func getContacts(siteNumber: String, pageIndex: Int = 0, pageSize: Int = 500) async -> Result<ContactList, RequestError> {
         return await sendRequest(endpoint: ACSEndpoint.getContacts(siteNumber: siteNumber, pageIndex: pageIndex, pageSize: pageSize), responseModel: ContactList.self)
     }
     

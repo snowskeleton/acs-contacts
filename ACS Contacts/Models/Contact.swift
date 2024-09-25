@@ -154,7 +154,6 @@ class Contact: Identifiable {
         self.statusSelected = apiResponse.StatusSelected
     }
     
-    @MainActor
     func update(with apiResponse: IndividualContactResponse) {
         self.indvId = apiResponse.IndvId
         self.famId = apiResponse.PrimFamily
@@ -173,43 +172,40 @@ class Contact: Identifiable {
         self.memberStatus = apiResponse.MemberStatus
         self.userIsLeaderOf = apiResponse.UserIsLeaderOf
         self.isCRPending = apiResponse.IsCRPending
-        self.addresses = apiResponse.Addresses.map { Address.createOrUpdate(from: $0) }
-        self.emails = apiResponse.Emails.map { Email.createOrUpdate(from: $0) }
-        self.phones = apiResponse.Phones.map { Phone.createOrUpdate(from: $0) }
     }
 
     
-    @MainActor static func createOrUpdate(
-        from apiContact: ContactList.Contact
-    ) -> Contact {
-        let fetchDescriptor = FetchDescriptor<Contact>(
-            predicate: #Predicate<Contact> { $0.indvId == apiContact.IndvId }
-        )
-        let context = SwiftDataManager.shared.container.mainContext
-        let contacts = try? context.fetch(fetchDescriptor)
-        
-        if let finalContact = (contacts ?? []).first {
-            finalContact.update(with: apiContact)
-            return finalContact
-        } else {
-            return .init(from: apiContact)
-        }
-    }
-    
-    @MainActor static func createOrUpdate(
-        from apiContact: IndividualContactResponse
-    ) -> Contact {
-        let fetchDescriptor = FetchDescriptor<Contact>(
-            predicate: #Predicate<Contact> { $0.indvId == apiContact.IndvId }
-        )
-        let context = SwiftDataManager.shared.container.mainContext
-        let contacts = try? context.fetch(fetchDescriptor)
-        
-        if let finalContact = (contacts ?? []).first {
-            finalContact.update(with: apiContact)
-            return finalContact
-        } else {
-            return .init(from: apiContact)
-        }
-    }
+//    @MainActor static func createOrUpdate(
+//        from apiContact: ContactList.Contact
+//    ) -> Contact {
+//        let fetchDescriptor = FetchDescriptor<Contact>(
+//            predicate: #Predicate<Contact> { $0.indvId == apiContact.IndvId }
+//        )
+//        let context = SwiftDataManager.shared.container.mainContext
+//        let contacts = try? context.fetch(fetchDescriptor)
+//        
+//        if let finalContact = (contacts ?? []).first {
+//            finalContact.update(with: apiContact)
+//            return finalContact
+//        } else {
+//            return .init(from: apiContact)
+//        }
+//    }
+//    
+//    @MainActor static func createOrUpdate(
+//        from apiContact: IndividualContactResponse
+//    ) -> Contact {
+//        let fetchDescriptor = FetchDescriptor<Contact>(
+//            predicate: #Predicate<Contact> { $0.indvId == apiContact.IndvId }
+//        )
+//        let context = SwiftDataManager.shared.container.mainContext
+//        let contacts = try? context.fetch(fetchDescriptor)
+//        
+//        if let finalContact = (contacts ?? []).first {
+//            finalContact.update(with: apiContact)
+//            return finalContact
+//        } else {
+//            return .init(from: apiContact)
+//        }
+//    }
 }
