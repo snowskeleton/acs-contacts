@@ -22,7 +22,7 @@ struct SingleContactView: View {
     @State private var showAlert: Bool = false
     
     @State private var showProgressView: Bool = false
-
+    
     var body: some View {
         VStack {
             HStack {
@@ -145,58 +145,77 @@ struct SingleContactView: View {
     }
     
     private func addContact() {
-        withAnimation {
-            addedContact = true
-        }
-        
-        let store = CNContactStore()
-        let saveableContact = CNMutableContact()
-        
-        saveableContact.givenName = contact.firstName ?? ""
-        saveableContact.middleName = contact.middleName ?? ""
-        saveableContact.familyName = contact.lastName ?? ""
-        
-        saveableContact.phoneNumbers = contact.phones.filter {
-            $0.phoneNumber != nil
-        }.map {
-            CNLabeledValue(
-                label: $0.phoneType != nil ? $0.phoneType : CNLabelPhoneNumberMobile,
-                value: CNPhoneNumber(stringValue: $0.phoneNumber!)
-            )
-        }
-        
-        saveableContact.postalAddresses = contact.addresses.filter {
-            $0.addressLine1 != nil
-        }.map { address in
-            let postalAddress = CNMutablePostalAddress()
+        Task {
+            withAnimation {
+                addedContact = true
+            }
             
-            postalAddress.street = [address.addressLine1, address.addressLine2].compactMap { $0 }.joined(separator: "\n")
-            postalAddress.city = address.city ?? ""
-            postalAddress.state = address.state ?? ""
-            postalAddress.postalCode = address.zipcode ?? ""
-            postalAddress.country = address.country ?? ""
+            let store = CNContactStore()
+            let saveableContact = CNMutableContact()
             
-            return CNLabeledValue(
-                label: address.addrType ?? CNLabelHome,
-                value: postalAddress
-            )
+            saveableContact.givenName = contact.firstName ?? ""
+            saveableContact.middleName = contact.middleName ?? ""
+            saveableContact.familyName = contact.lastName ?? ""
+            
+            saveableContact.phoneNumbers = contact.phones.filter {
+                $0.phoneNumber != nil
+            }.map {
+                CNLabeledValue(
+                    label: $0.phoneType != nil ? $0.phoneType : CNLabelPhoneNumberMobile,
+                    value: CNPhoneNumber(stringValue: $0.phoneNumber!)
+                )
+            }
+            
+            saveableContact.postalAddresses = contact.addresses.filter {
+                $0.addressLine1 != nil
+            }.map { address in
+                let postalAddress = CNMutablePostalAddress()
+                
+                postalAddress.street = [address.addressLine1, address.addressLine2].compactMap { $0 }.joined(separator: "\n")
+                postalAddress.city = address.city ?? ""
+                postalAddress.state = address.state ?? ""
+                postalAddress.postalCode = address.zipcode ?? ""
+                postalAddress.country = address.country ?? ""
+                
+                return CNLabeledValue(
+                    label: address.addrType ?? CNLabelHome,
+                    value: postalAddress
+                )
+            }
+            
+            saveableContact.emailAddresses = contact.emails.filter {
+                $0.email != nil
+            }.map { email in
+                CNLabeledValue(
+                    label: email.emailType ?? CNLabelHome,
+                    value: email.email! as NSString
+                )
+            }
+            
+            if let pictureUrlString = contact.pictureUrl,
+               let pictureUrl = URL(string: pictureUrlString),
+               let imageData = await fetchImageData(from: pictureUrl) {
+                saveableContact.imageData = imageData
+            }
+            
+            let saveRequest = CNSaveRequest()
+            saveRequest.add(saveableContact, toContainerWithIdentifier: nil)
+            try? store.execute(saveRequest)
+            
+            alertAlertTitle = "Contact Saved!"
+            alertAlertMessage = ""
+            showAlert = true
         }
-        
-        saveableContact.emailAddresses = contact.emails.filter {
-            $0.email != nil
-        }.map { email in
-            CNLabeledValue(
-                label: email.emailType ?? CNLabelHome,
-                value: email.email! as NSString
-            )
-        }
+    }
+}
 
-        let saveRequest = CNSaveRequest()
-        saveRequest.add(saveableContact, toContainerWithIdentifier: nil)
-        try? store.execute(saveRequest)
-        
-        alertAlertTitle = "Contact Saved!"
-        alertAlertMessage = ""
-        showAlert = true
+
+private func fetchImageData(from url: URL) async -> Data? {
+    do {
+        let (data, _) = try await URLSession.shared.data(from: url)
+        return data
+    } catch {
+        print("Failed to fetch image data: \(error)")
+        return nil
     }
 }
