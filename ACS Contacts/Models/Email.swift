@@ -51,22 +51,4 @@ class Email: Identifiable {
         self.email = apiResponse.Email
         self.listed = apiResponse.Listed
     }
-
-    
-    @MainActor static func createOrUpdate(
-        from apiEmail: IndividualContactResponse.Email
-    ) -> Email {
-        let fetchDescriptor = FetchDescriptor<Email>(
-            predicate: #Predicate<Email> { $0.emailId == apiEmail.EmailId }
-        )
-        let context = SwiftDataManager.shared.container.mainContext
-        let emails = try? context.fetch(fetchDescriptor)
-        
-        if let finalEmail = (emails ?? []).first {
-            finalEmail.update(with: apiEmail)
-            return finalEmail
-        } else {
-            return .init(from: apiEmail)
-        }
-    }
 }

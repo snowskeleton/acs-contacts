@@ -113,22 +113,4 @@ class Address: Identifiable {
         self.zipcode = apiResponse.Zipcode
         self.cityStateZip = apiResponse.CityStateZip
     }
-
-//    @MainActor
-//    static func createOrUpdate(
-//        from apiAddress: IndividualContactResponse.Address
-//    ) -> Address {
-//        let fetchDescriptor = FetchDescriptor<Address>(
-//            predicate: #Predicate<Address> { $0.addrId == apiAddress.AddrId }
-//        )
-//        let context = SwiftDataManager.shared.container.mainContext
-//        let addresses = try? context.fetch(fetchDescriptor)
-//        
-//        if let finalAddress = (addresses ?? []).first {
-//            finalAddress.update(with: apiAddress)
-//            return finalAddress
-//        } else {
-//            return .init(from: apiAddress)
-//        }
-//    }
 }

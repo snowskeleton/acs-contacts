@@ -173,39 +173,4 @@ class Contact: Identifiable {
         self.userIsLeaderOf = apiResponse.UserIsLeaderOf
         self.isCRPending = apiResponse.IsCRPending
     }
-
-    
-//    @MainActor static func createOrUpdate(
-//        from apiContact: ContactList.Contact
-//    ) -> Contact {
-//        let fetchDescriptor = FetchDescriptor<Contact>(
-//            predicate: #Predicate<Contact> { $0.indvId == apiContact.IndvId }
-//        )
-//        let context = SwiftDataManager.shared.container.mainContext
-//        let contacts = try? context.fetch(fetchDescriptor)
-//        
-//        if let finalContact = (contacts ?? []).first {
-//            finalContact.update(with: apiContact)
-//            return finalContact
-//        } else {
-//            return .init(from: apiContact)
-//        }
-//    }
-//    
-//    @MainActor static func createOrUpdate(
-//        from apiContact: IndividualContactResponse
-//    ) -> Contact {
-//        let fetchDescriptor = FetchDescriptor<Contact>(
-//            predicate: #Predicate<Contact> { $0.indvId == apiContact.IndvId }
-//        )
-//        let context = SwiftDataManager.shared.container.mainContext
-//        let contacts = try? context.fetch(fetchDescriptor)
-//        
-//        if let finalContact = (contacts ?? []).first {
-//            finalContact.update(with: apiContact)
-//            return finalContact
-//        } else {
-//            return .init(from: apiContact)
-//        }
-//    }
 }
