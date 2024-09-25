@@ -22,6 +22,15 @@ class Phone: Identifiable {
     var addrPhone: Bool?
     var phoneRef: String?
     
+    var searchablePhoneNumber: String {
+        return (phoneNumber ?? "")
+            .replacingOccurrences(of: "-", with: "")
+            .replacingOccurrences(of: ")", with: "")
+            .replacingOccurrences(of: "(", with: "")
+            .replacingOccurrences(of: ".", with: "")
+            .replacingOccurrences(of: " ", with: "")
+    }
+    
     init(
         phoneId: Int,
         phoneType: String?,

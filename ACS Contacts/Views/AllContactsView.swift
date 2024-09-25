@@ -20,7 +20,8 @@ struct AllContactsView: View {
             return []
         } else {
             return contacts.filter {
-                $0.displayName.lowercased().contains(searchText.lowercased())
+                $0.displayName.lowercased().contains(searchText.lowercased()) ||
+                $0.phones.contains(where: { $0.searchablePhoneNumber.contains(searchText.lowercased()) })
             }
         }
     }
