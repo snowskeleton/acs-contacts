@@ -115,11 +115,6 @@ struct SingleContactView: View {
         .onAppear {
             fetchContact()
         }
-        .overlay {
-            if showProgressView {
-                ProgressView()
-            }
-        }
         .alert(isPresented: $showAlert) {
             Alert(
                 title: Text(alertAlertTitle),
@@ -130,7 +125,6 @@ struct SingleContactView: View {
     }
     
     private func fetchContact() {
-        showProgressView = true
         Task {
             let result = await ACSService().getIndividualContact(siteNumber: siteNumber, indvId: contact.indvId.description)
             
@@ -145,8 +139,6 @@ struct SingleContactView: View {
                 alertAlertMessage = error.customMessage
                 showAlert = true
             }
-            
-            showProgressView = false
         }
     }
     
