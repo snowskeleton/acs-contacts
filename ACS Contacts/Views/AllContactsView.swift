@@ -14,10 +14,14 @@ struct AllContactsView: View {
     @Query(sort: \Contact.lastName) var contacts: [Contact]
     @State private var searchText: String = ""
     var presentableContacts: [Contact] {
-        searchText.isEmpty ?
-        contacts :
-        contacts.filter {
-            $0.displayName.lowercased().contains(searchText.lowercased())
+        if searchText.isEmpty {
+            return contacts
+        } else if searchText.count > 0 && searchText.count < 3 {
+            return []
+        } else {
+            return contacts.filter {
+                $0.displayName.lowercased().contains(searchText.lowercased())
+            }
         }
     }
     
