@@ -21,18 +21,29 @@ func scheduleAppRefresh() {
         }
 }
 
-@MainActor
 func fetchContactsInBackground() async {
     let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
     let databasePath = documentsDirectory.appendingPathComponent("contacts.sqlite").path
     let db = try! Blackbird.Database(path: databasePath)
-
+    
     switch await fetchContacts(onProgressUpdate: { _, _, _ in }) {
     case .success(let contacts):
         await Contact.bulkInit(db, contacts)
-        print("saving \(contacts.count) contacts")
         UserDefaults.standard.set(true, forKey: "completedInitialDownload")
     case .failure(let error):
         print("Failed to save contacts: \(error)")
+    }
+
+    if !UserDefaults.standard.bool(forKey: "completedFullUpdate") {
+        let contacts = try! await Contact.read(from: db, orderBy: .descending(\.$lastUpdated))
+        await Contact.updateAll(db, contacts)
+        UserDefaults.standard.set(true, forKey: "completedFullUpdate")
+    } else {
+        let contacts = try! await Contact.read(
+            from: db,
+            orderBy: .ascending(\.$lastUpdated),
+            limit: 100
+        )
+        await Contact.updateAll(db, contacts)
     }
 }

@@ -40,7 +40,6 @@ struct ACS_ContactsApp: App {
             }
         }
         .backgroundTask(.appRefresh("contactListDownload")) {
-            print("we're in the background!")
             await fetchContactsInBackground()
         }
         .environment(\.blackbirdDatabase, database)

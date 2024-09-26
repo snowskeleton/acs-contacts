@@ -16,6 +16,7 @@ struct DeveloperMenuView: View {
 
     @AppStorage("fetchContactsPageSize") var pageSize = "500"
     @AppStorage("completedInitialDownload") var contactsDownloaded = false
+    @AppStorage("completedFullUpdate") var completedFullUpdate = false
 
     var body: some View {
         List {
@@ -23,6 +24,8 @@ struct DeveloperMenuView: View {
                 TextField("Page size", text: $pageSize)
                     .keyboardType(.numberPad)
             }
+            
+            Toggle("Update all contacts in background", isOn: $contactsDownloaded)
             
             Section("Actions") {
                 Button("Crash!") { showCrashConfirmation = true }

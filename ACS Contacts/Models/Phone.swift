@@ -24,15 +24,7 @@ struct Phone: BlackbirdModel, Identifiable {
     @BlackbirdColumn var phoneExtension: String?
     @BlackbirdColumn var addrPhone: Bool?
     @BlackbirdColumn var phoneRef: String?
-    
-    var searchablePhoneNumber: String {
-        return (phoneNumber ?? "")
-            .replacingOccurrences(of: "-", with: "")
-            .replacingOccurrences(of: ")", with: "")
-            .replacingOccurrences(of: "(", with: "")
-            .replacingOccurrences(of: ".", with: "")
-            .replacingOccurrences(of: " ", with: "")
-    }
+    @BlackbirdColumn var searchablePhoneNumber: String
 
     init(from apiResponse: IndividualContactResponse.Phone, for indvId: Int) {
         self.indvId = indvId
@@ -42,9 +34,15 @@ struct Phone: BlackbirdModel, Identifiable {
         self.preferred = apiResponse.Preferred
         self.phoneNumber = apiResponse.PhoneNumber
         self.listed = apiResponse.Listed
-        self.familyPhone = familyPhone
-        self.phoneExtension = phoneExtension
-        self.addrPhone = addrPhone
-        self.phoneRef = phoneRef
+        self.familyPhone = apiResponse.FamilyPhone
+        self.phoneExtension = apiResponse.Extension
+        self.addrPhone = apiResponse.AddrPhone
+        self.phoneRef = apiResponse.PhoneRef?.description
+        self.searchablePhoneNumber = (apiResponse.PhoneNumber ?? "")
+            .replacingOccurrences(of: "-", with: "")
+            .replacingOccurrences(of: ")", with: "")
+            .replacingOccurrences(of: "(", with: "")
+            .replacingOccurrences(of: ".", with: "")
+            .replacingOccurrences(of: " ", with: "")
     }
 }

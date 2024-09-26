@@ -29,18 +29,8 @@ struct Contact: BlackbirdModel, Identifiable {
     @BlackbirdColumn var memberStatus: String?
     @BlackbirdColumn var userIsLeaderOf: Bool?
     @BlackbirdColumn var isCRPending: Bool?
-    
-    var displayName: String {
-        if let name = friendlyName, !name.isEmpty {
-            return name
-        } else if let firstName, let lastName {
-            return "\(firstName) \(lastName)"
-        } else if let firstName {
-            return firstName
-        } else {
-            return "NoName: \(indvId)"
-        }
-    }
+    @BlackbirdColumn var displayName: String
+    @BlackbirdColumn var lastUpdated: Date?
 
     init(from apiResponse: ContactList.Contact) {
         self.indvId = apiResponse.IndvId
@@ -52,6 +42,17 @@ struct Contact: BlackbirdModel, Identifiable {
         self.middleName = apiResponse.MiddleName
         self.goesByName = apiResponse.GoesByName
         self.suffix = apiResponse.Suffix
+        self.displayName = {
+            if let goesByName = apiResponse.GoesByName, !goesByName.isEmpty {
+                return goesByName
+            } else if let firstName = apiResponse.FirstName, let lastName = apiResponse.LastName {
+                return "\(firstName) \(lastName)"
+            } else if let firstName = apiResponse.FirstName {
+                return firstName
+            } else {
+                return "NoName: \(apiResponse.IndvId)"
+            }
+        }()
         self.pictureUrl = apiResponse.PictureUrl
         self.statusSelected = apiResponse.StatusSelected
     }
@@ -69,12 +70,50 @@ struct Contact: BlackbirdModel, Identifiable {
         self.suffix = apiResponse.Suffix
         self.fullName = apiResponse.FullName
         self.friendlyName = apiResponse.FriendlyName
+        self.displayName = {
+            if let name = apiResponse.FriendlyName, !name.isEmpty {
+                return name
+            } else if let firstName = apiResponse.FirstName, let lastName = apiResponse.LastName {
+                return "\(firstName) \(lastName)"
+            } else if let firstName = apiResponse.FirstName {
+                return firstName
+            } else {
+                return "NoName: \(apiResponse.IndvId)"
+            }
+        }()
+
         self.pictureUrl = apiResponse.PictureUrl
         self.familyPictureUrl = apiResponse.FamilyPictureUrl
         self.dateOfBirth = apiResponse.DateOfBirth
         self.memberStatus = apiResponse.MemberStatus
         self.userIsLeaderOf = apiResponse.UserIsLeaderOf
         self.isCRPending = apiResponse.IsCRPending
+        self.lastUpdated = Date()
+    }
+    
+    func update(_ db: Blackbird.Database, _ apiResponse: IndividualContactResponse) async {
+        do {
+            let contact = Contact(from: apiResponse)
+            try await contact.write(to: db)
+            
+            for remoteAddress in apiResponse.Addresses {
+                let address = Address(from: remoteAddress, for: contact.indvId)
+                try await address.write(to: db)
+            }
+            
+            for remoteEmail in apiResponse.Emails {
+                let email = Email(from: remoteEmail, for: contact.indvId)
+                try await email.write(to: db)
+            }
+            
+            for remotePhone in apiResponse.Phones {
+                let phone = Phone(from: remotePhone, for: contact.indvId)
+                try await phone.write(to: db)
+            }
+            
+        } catch {
+            print("Failed to create contact: \(error)")
+        }
     }
 
     static public func bulkInit(_ db: Blackbird.Database, _ apiResponse: [ContactList.Contact]) async {
@@ -84,33 +123,62 @@ struct Contact: BlackbirdModel, Identifiable {
                     let contact = Contact(from: apiContact)
                     
                     try core.query(
-            """
-            INSERT INTO Contact (indvId, famId, familyPosition, title, firstName, lastName, middleName, goesByName, suffix, pictureUrl, statusSelected, fullName, friendlyName, familyPictureUrl, dateOfBirth, memberStatus, userIsLeaderOf, isCRPending)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(indvId) DO UPDATE SET
-                famId = excluded.famId,
-                familyPosition = excluded.familyPosition,
-                title = excluded.title,
-                firstName = excluded.firstName,
-                lastName = excluded.lastName,
-                middleName = excluded.middleName,
-                goesByName = excluded.goesByName,
-                suffix = excluded.suffix,
-                pictureUrl = excluded.pictureUrl,
-                statusSelected = excluded.statusSelected,
-                fullName = excluded.fullName,
-                friendlyName = excluded.friendlyName,
-                familyPictureUrl = excluded.familyPictureUrl,
-                dateOfBirth = excluded.dateOfBirth,
-                memberStatus = excluded.memberStatus,
-                userIsLeaderOf = excluded.userIsLeaderOf,
-                isCRPending = excluded.isCRPending
-            """,
-            contact.indvId, contact.famId, contact.familyPosition, contact.title, contact.firstName, contact.lastName, contact.middleName, contact.goesByName, contact.suffix, contact.pictureUrl, contact.statusSelected, contact.fullName, contact.friendlyName, contact.familyPictureUrl, contact.dateOfBirth, contact.memberStatus, contact.userIsLeaderOf, contact.isCRPending
+                        """
+                        INSERT INTO Contact (
+                            indvId, famId, familyPosition, title, firstName, lastName, middleName, 
+                            goesByName, suffix, pictureUrl, statusSelected, fullName, friendlyName, 
+                            familyPictureUrl, dateOfBirth, memberStatus, userIsLeaderOf, isCRPending, displayName
+                        ) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        ON CONFLICT(indvId) DO UPDATE SET
+                            famId = excluded.famId,
+                            familyPosition = excluded.familyPosition,
+                            title = excluded.title,
+                            firstName = excluded.firstName,
+                            lastName = excluded.lastName,
+                            middleName = excluded.middleName,
+                            goesByName = excluded.goesByName,
+                            suffix = excluded.suffix,
+                            pictureUrl = excluded.pictureUrl,
+                            statusSelected = excluded.statusSelected,
+                            fullName = excluded.fullName,
+                            friendlyName = excluded.friendlyName,
+                            familyPictureUrl = excluded.familyPictureUrl,
+                            dateOfBirth = excluded.dateOfBirth,
+                            memberStatus = excluded.memberStatus,
+                            userIsLeaderOf = excluded.userIsLeaderOf,
+                            isCRPending = excluded.isCRPending,
+                            displayName = excluded.displayName
+                        """,
+                        contact.indvId, contact.famId, contact.familyPosition, contact.title,
+                        contact.firstName, contact.lastName, contact.middleName, contact.goesByName,
+                        contact.suffix, contact.pictureUrl, contact.statusSelected, contact.fullName,
+                        contact.friendlyName, contact.familyPictureUrl, contact.dateOfBirth,
+                        contact.memberStatus, contact.userIsLeaderOf, contact.isCRPending, contact.displayName
                     )
                 }
             }
-            
         } catch { }
+    }
+}
+
+extension Contact {
+    @MainActor
+    static public func updateAll(_ db: Blackbird.Database, _ contacts: [Contact]) async {
+        if let siteNumber = UserDefaults.standard.string(forKey: "siteNumber") {
+            for contact in contacts {
+                print(contact.firstName)
+                let result = await ACSService().getIndividualContact(siteNumber: siteNumber, indvId: contact.indvId.description)
+                
+                switch result {
+                case .success(let contactResponse):
+                    await contact.update(db, contactResponse)
+                case .failure(let error):
+                    print(error)
+                }
+            }
+        } else {
+            print("No site number")
+        }
     }
 }

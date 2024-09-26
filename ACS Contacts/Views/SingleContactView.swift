@@ -156,30 +156,7 @@ struct SingleContactView: View {
                 
                 switch result {
                 case .success(let contactResponse):
-                    Task.detached {
-                        do {
-                            let contact = Contact(from: contactResponse)
-                            try await contact.write(to: db!)
-                            
-                            for remoteAddress in contactResponse.Addresses {
-                                let address = Address(from: remoteAddress, for: contact.indvId)
-                                try await address.write(to: db!)
-                            }
-                            
-                            for remoteEmail in contactResponse.Emails {
-                                let email = Email(from: remoteEmail, for: contact.indvId)
-                                try await email.write(to: db!)
-                            }
-                            
-                            for remotePhone in contactResponse.Phones {
-                                let phone = Phone(from: remotePhone, for: contact.indvId)
-                                try await phone.write(to: db!)
-                            }
-                            
-                        } catch {
-                            print("Failed to create contact: \(error)")
-                        }
-                    }
+                    await contact.update(db!, contactResponse)
                 case .failure(let error):
                     alertAlertTitle = "Failed to fetch contact"
                     alertAlertMessage = error.customMessage

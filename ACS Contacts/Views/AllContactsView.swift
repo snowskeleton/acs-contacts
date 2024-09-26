@@ -9,49 +9,64 @@ import SwiftUI
 import SwiftData
 import Blackbird
 
-struct AllContactsView: View {
-    @Environment(\.modelContext) private var context
+struct ListContactsView: View {
     @Environment(\.blackbirdDatabase) var db
+
+    @BlackbirdLiveModels var contacts: Blackbird.LiveResults<Contact>
+    @BlackbirdLiveModels var phones: Blackbird.LiveResults<Phone>
+    @Binding var searchText: String
     
-    @BlackbirdLiveModels({ try await Contact.read(from: $0, orderBy: .ascending(\.$lastName)) }) var contacts
-    @BlackbirdLiveModels<Phone>({ try await Phone.read( from: $0, orderBy: .ascending(\.$phoneId)) }) var phones
-    
-    var phoneLookup: [Int: [String]] {
-        var lookup = [Int: [String]]()
-        for phone in phones.results {
-            if let phoneNumber = phone.phoneNumber {
-                lookup[phone.indvId, default: []].append(phoneNumber)
-            }
-        }
-        return lookup
+    init(searchText: Binding<String>) {
+        _searchText = searchText
+        _contacts = BlackbirdLiveModels<Contact> { try await Contact.read(from: $0, orderBy: .ascending(\.$lastName)) }
+        _phones = BlackbirdLiveModels<Phone> { try await Phone.read(from: $0) }
     }
     
-    @State private var searchText: String = ""
     var presentableContacts: [Contact] {
         if searchText.isEmpty {
             return contacts.results
         } else {
+            let filteredPhones = phones.results.filter { phone in
+                phone.searchablePhoneNumber.lowercased().contains(searchText.lowercased())
+            }
             return contacts.results.filter { contact in
                 let nameMatches = contact.displayName.lowercased().contains(searchText.lowercased())
-                
-                if let phoneNumbers = phoneLookup[contact.indvId] {
-                    let phoneMatches = phoneNumbers.contains { phoneNumber in
-                        phoneNumber.lowercased().contains(searchText.lowercased())
-                    }
-                    return nameMatches || phoneMatches
-                } else {
-                    return nameMatches
-                }
+                let phoneMatches = filteredPhones.contains { $0.indvId == contact.indvId }
+                return nameMatches || phoneMatches
             }
         }
     }
+    var body: some View {
+        Button("Update All") {
+            Task {
+                let contacts = try! await Contact.read(
+                    from: db!,
+                    sqlWhere: "true ORDER BY lastUpdated DESC LIMIT 100"
+                )
+//                await Contact.updateAll(db!, contacts.results)
+            }
+        }
+        List(presentableContacts, id: \.indvId) { contact in
+            NavigationLink {
+                SingleContactView(contact: contact)
+            } label: {
+                Text(contact.displayName)
+            }
+        }
+    }
+}
 
+struct AllContactsView: View {
+    @Environment(\.modelContext) private var context
+    @Environment(\.blackbirdDatabase) var db
+    
+    @State private var searchText: String = ""
     @State private var alertErrorTitle: String = "Default error title"
     @State private var alertErrorMessage: String = "Default error message"
     @State private var showAlert: Bool = false
     
     @State private var showProgressView: Bool = false
-    @State private var progressViewLabel: String = "Downloading Contacts..."
+    @State private var progressViewLabel: String = "Default progress label"
     @State private var progressViewProgress: Int = 0
     @State private var progressViewGoal: Int = 0
     
@@ -75,16 +90,8 @@ struct AllContactsView: View {
                     )
                     .progressViewStyle(.linear)
                 }
-                List(presentableContacts, id: \.indvId) { contact in
-                    NavigationLink {
-                        SingleContactView(contact: contact)
-                    } label: {
-                        Text(contact.displayName)
-                    }
-                }
-                .refreshable {
-                    saveContactsToModelContext()
-                }
+                ListContactsView(searchText: $searchText)
+                .refreshable { saveContactsToModelContext() }
                 .searchable(text: $searchText)
                 .onAppear { gatedFetchContacts() }
             }
