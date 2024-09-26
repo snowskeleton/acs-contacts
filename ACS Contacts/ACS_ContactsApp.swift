@@ -21,12 +21,8 @@ struct ACS_ContactsApp: App {
             with: InitOptions(host: AptabaseSecrets.host)
         )
         
-        // Get the document directory path
         let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        // Define the path for the database file
         let databasePath = documentsDirectory.appendingPathComponent("contacts.sqlite").path
-        
-        // Initialize the database with the file path
         _database = StateObject(wrappedValue: try! Blackbird.Database(path: databasePath))
 
     }
