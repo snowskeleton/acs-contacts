@@ -14,21 +14,38 @@ struct AllContactsView: View {
     @Environment(\.blackbirdDatabase) var db
     
     @BlackbirdLiveModels({ try await Contact.read(from: $0, orderBy: .ascending(\.$lastName)) }) var contacts
+    @BlackbirdLiveModels<Phone>({ try await Phone.read( from: $0, orderBy: .ascending(\.$phoneId)) }) var phones
+    
+    var phoneLookup: [Int: [String]] {
+        var lookup = [Int: [String]]()
+        for phone in phones.results {
+            if let phoneNumber = phone.phoneNumber {
+                lookup[phone.indvId, default: []].append(phoneNumber)
+            }
+        }
+        return lookup
+    }
     
     @State private var searchText: String = ""
     var presentableContacts: [Contact] {
         if searchText.isEmpty {
             return contacts.results
-        } else if searchText.count > 0 && searchText.count < 3 {
-            return []
         } else {
-            return contacts.results.filter {
-                $0.displayName.lowercased().contains(searchText.lowercased()) //||
-//                $0.phones.contains(where: { $0.searchablePhoneNumber.contains(searchText.lowercased()) })
+            return contacts.results.filter { contact in
+                let nameMatches = contact.displayName.lowercased().contains(searchText.lowercased())
+                
+                if let phoneNumbers = phoneLookup[contact.indvId] {
+                    let phoneMatches = phoneNumbers.contains { phoneNumber in
+                        phoneNumber.lowercased().contains(searchText.lowercased())
+                    }
+                    return nameMatches || phoneMatches
+                } else {
+                    return nameMatches
+                }
             }
         }
     }
-    
+
     @State private var alertErrorTitle: String = "Default error title"
     @State private var alertErrorMessage: String = "Default error message"
     @State private var showAlert: Bool = false
@@ -90,31 +107,32 @@ struct AllContactsView: View {
     
     private func saveContactsToModelContext() {
         Task {
+            let result = await fetchContacts { progress, goal, _ in
+                progressViewProgress = progress
+                progressViewGoal = goal
+            }
             progressViewLabel = "Downloading Contacts..."
             showProgressView = true
-            
-            let result = await fetchContacts { currentProgress, totalProgress, _ in
-                progressViewProgress = currentProgress
-                progressViewGoal = totalProgress
-            }
-            
+
             switch result {
             case .success(let contacts):
                 progressViewLabel = "Saving Contacts..."
-                var progressCount = 0
+                var progress = 0
                 for apiContact in contacts {
                     do {
-                        progressCount += 1
-                        progressViewProgress = progressCount
+                        progress += 1
+                        progressViewProgress = progress
                         let contact = Contact(from: apiContact)
                         try await contact.write(to: db!)
                     } catch {
                         print("Failed to create contact: \(error)")
+                        progressViewLabel = "Save Failed"
                     }
                 }
                 print("success! we have \(contacts.count) objects")
             case .failure(let error):
                 print(error)
+                progressViewLabel = "Download Failed"
                 alertErrorTitle = "Fetch Error"
                 alertErrorMessage = "Failed to Fetch Contacts.\n\(error.customMessage)"
                 showAlert = true
@@ -167,7 +185,7 @@ func fetchContacts(
             totalPages = contactsResponse.PageCount
             pageIndex += 1
             
-            onProgressUpdate(pageIndex * pageSize, totalRecords, contactsResponse.Page)
+            onProgressUpdate(contacts.count, totalRecords, contactsResponse.Page)
         case .failure(let error):
             return .failure(error)
         }
