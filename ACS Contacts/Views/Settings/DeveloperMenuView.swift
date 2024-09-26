@@ -10,6 +10,7 @@ import SwiftData
 
 struct DeveloperMenuView: View {
     @Environment(\.modelContext) private var context
+    @Environment(\.blackbirdDatabase) var db
 
     @State private var showCrashConfirmation = false
 
@@ -34,9 +35,19 @@ struct DeveloperMenuView: View {
                                     fatalError()
                                 }
                         }
-                Button("Drop all tables", role: .destructive) {
-                    try? ModelContainer().deleteAllData()
-                    contactsDownloaded = false
+                Button("Clear All Data", role: .destructive) {
+                    Task {
+                        do {
+                            try await db!.execute("DELETE FROM Contact;")
+                            try await db!.execute("DELETE FROM Address;")
+                            try await db!.execute("DELETE FROM Email;")
+                            try await db!.execute("DELETE FROM Phone;")
+                            
+                            contactsDownloaded = false
+                        } catch {
+                            print("Failed to delete data: \(error)")
+                        }
+                    }
                 }
             }
             
