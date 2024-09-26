@@ -33,10 +33,14 @@ struct ACS_ContactsApp: App {
         }
         .onChange(of: phase) { _, newPhase in
             if newPhase == .background {
-                scheduleAppRefresh()
+                Task {
+                    await database.close()
+                    scheduleAppRefresh()
+                }
             }
         }
         .backgroundTask(.appRefresh("contactListDownload")) {
+            print("we're in the background!")
             await fetchContactsInBackground()
         }
         .environment(\.blackbirdDatabase, database)

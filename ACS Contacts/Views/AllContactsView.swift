@@ -117,19 +117,7 @@ struct AllContactsView: View {
             switch result {
             case .success(let contacts):
                 progressViewLabel = "Saving Contacts..."
-                var progress = 0
-                for apiContact in contacts {
-                    do {
-                        progress += 1
-                        progressViewProgress = progress
-                        let contact = Contact(from: apiContact)
-                        try await contact.write(to: db!)
-                    } catch {
-                        print("Failed to create contact: \(error)")
-                        progressViewLabel = "Save Failed"
-                    }
-                }
-                print("success! we have \(contacts.count) objects")
+                await Contact.bulkInit(db!, contacts)
             case .failure(let error):
                 print(error)
                 progressViewLabel = "Download Failed"
