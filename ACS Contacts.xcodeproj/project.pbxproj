@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		806BE0862CA1B3BB000E86C0 /* Aptabase in Frameworks */ = {isa = PBXBuildFile; productRef = 806BE0852CA1B3BB000E86C0 /* Aptabase */; };
-		808387C92CA4872E0094DD43 /* Blackbird in Frameworks */ = {isa = PBXBuildFile; productRef = 808387C82CA4872E0094DD43 /* Blackbird */; };
+		808387CF2CA49A880094DD43 /* Blackbird in Frameworks */ = {isa = PBXBuildFile; productRef = 808387CE2CA49A880094DD43 /* Blackbird */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -29,7 +29,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				806BE0862CA1B3BB000E86C0 /* Aptabase in Frameworks */,
-				808387C92CA4872E0094DD43 /* Blackbird in Frameworks */,
+				808387CF2CA49A880094DD43 /* Blackbird in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -73,7 +73,7 @@
 			name = "ACS Contacts";
 			packageProductDependencies = (
 				806BE0852CA1B3BB000E86C0 /* Aptabase */,
-				808387C82CA4872E0094DD43 /* Blackbird */,
+				808387CE2CA49A880094DD43 /* Blackbird */,
 			);
 			productName = "ACS Contacts";
 			productReference = 806BE04C2CA1A995000E86C0 /* ACS Contacts.app */;
@@ -105,7 +105,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				806BE0842CA1B3BB000E86C0 /* XCRemoteSwiftPackageReference "aptabase-swift" */,
-				808387C72CA4872E0094DD43 /* XCRemoteSwiftPackageReference "Blackbird" */,
+				808387CD2CA49A880094DD43 /* XCRemoteSwiftPackageReference "Blackbird" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 806BE04D2CA1A995000E86C0 /* Products */;
@@ -351,12 +351,12 @@
 				minimumVersion = 0.3.10;
 			};
 		};
-		808387C72CA4872E0094DD43 /* XCRemoteSwiftPackageReference "Blackbird" */ = {
+		808387CD2CA49A880094DD43 /* XCRemoteSwiftPackageReference "Blackbird" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/marcoarment/Blackbird";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.5.0;
+				branch = main;
+				kind = branch;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -367,9 +367,9 @@
 			package = 806BE0842CA1B3BB000E86C0 /* XCRemoteSwiftPackageReference "aptabase-swift" */;
 			productName = Aptabase;
 		};
-		808387C82CA4872E0094DD43 /* Blackbird */ = {
+		808387CE2CA49A880094DD43 /* Blackbird */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 808387C72CA4872E0094DD43 /* XCRemoteSwiftPackageReference "Blackbird" */;
+			package = 808387CD2CA49A880094DD43 /* XCRemoteSwiftPackageReference "Blackbird" */;
 			productName = Blackbird;
 		};
 /* End XCSwiftPackageProductDependency section */

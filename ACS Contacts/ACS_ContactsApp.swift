@@ -8,10 +8,13 @@
 import SwiftUI
 import SwiftData
 import Aptabase
+import Blackbird
 
 @main
 struct ACS_ContactsApp: App {
     @Environment(\.scenePhase) private var phase
+    @StateObject var database = try! Blackbird.Database.inMemoryDatabase()
+    
     init() {
         Aptabase.shared.initialize(
             appKey: AptabaseSecrets.appKey,
@@ -31,6 +34,6 @@ struct ACS_ContactsApp: App {
         .backgroundTask(.appRefresh("contactListDownload")) {
             await fetchContactsInBackground()
         }
-        .modelContainer(SwiftDataManager.shared.container)
+        .environment(\.blackbirdDatabase, database)
     }
 }

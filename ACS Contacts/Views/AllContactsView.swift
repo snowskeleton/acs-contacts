@@ -7,21 +7,24 @@
 
 import SwiftUI
 import SwiftData
+import Blackbird
 
 struct AllContactsView: View {
     @Environment(\.modelContext) private var context
+    @Environment(\.blackbirdDatabase) var db
     
-    @Query(sort: \Contact.lastName) var contacts: [Contact]
+    @BlackbirdLiveModels({ try await Contact.read(from: $0, orderBy: .ascending(\.$lastName)) }) var contacts
+    
     @State private var searchText: String = ""
     var presentableContacts: [Contact] {
         if searchText.isEmpty {
-            return contacts
+            return contacts.results
         } else if searchText.count > 0 && searchText.count < 3 {
             return []
         } else {
-            return contacts.filter {
-                $0.displayName.lowercased().contains(searchText.lowercased()) ||
-                $0.phones.contains(where: { $0.searchablePhoneNumber.contains(searchText.lowercased()) })
+            return contacts.results.filter {
+                $0.displayName.lowercased().contains(searchText.lowercased()) //||
+//                $0.phones.contains(where: { $0.searchablePhoneNumber.contains(searchText.lowercased()) })
             }
         }
     }
@@ -31,8 +34,9 @@ struct AllContactsView: View {
     @State private var showAlert: Bool = false
     
     @State private var showProgressView: Bool = false
-    @State private var progressViewProgress: Double = 0
-    @State private var progressViewGoal: Double = 0
+    @State private var progressViewLabel: String = "Downloading Contacts..."
+    @State private var progressViewProgress: Int = 0
+    @State private var progressViewGoal: Int = 0
     
     @AppStorage("completedInitialDownload") var contactsDownloaded = false
     
@@ -41,16 +45,16 @@ struct AllContactsView: View {
             VStack {
                 if showProgressView {
                     ProgressView(
-                        value: progressViewProgress,
-                        total: progressViewGoal,
+                        value: Double(progressViewProgress),
+                        total: Double(progressViewGoal),
                         label: {
                             HStack {
                                 Spacer()
-                                Text("Downloading Contacts...")
+                                Text(progressViewLabel)
                                 Spacer()
                             }
                         },
-                        currentValueLabel: { Text("\(Int(progressViewProgress)) / \(Int(progressViewGoal))")}
+                        currentValueLabel: { Text("\(progressViewProgress) / \(progressViewGoal)")}
                     )
                     .progressViewStyle(.linear)
                 }
@@ -86,21 +90,28 @@ struct AllContactsView: View {
     
     private func saveContactsToModelContext() {
         Task {
+            progressViewLabel = "Downloading Contacts..."
             showProgressView = true
             
-            let result = await fetchContacts { currentProgress, totalProgress, contacts in
+            let result = await fetchContacts { currentProgress, totalProgress, _ in
                 progressViewProgress = currentProgress
                 progressViewGoal = totalProgress
-                Task.detached {
-                    for apiContact in contacts {
-                        let actor = SwiftDataActor(modelContainer: SwiftDataManager.shared.container)
-                        await actor.createContact(apiContact)
-                    }
-                }
             }
             
             switch result {
             case .success(let contacts):
+                progressViewLabel = "Saving Contacts..."
+                var progressCount = 0
+                for apiContact in contacts {
+                    do {
+                        progressCount += 1
+                        progressViewProgress = progressCount
+                        let contact = Contact(from: apiContact)
+                        try await contact.write(to: db!)
+                    } catch {
+                        print("Failed to create contact: \(error)")
+                    }
+                }
                 print("success! we have \(contacts.count) objects")
             case .failure(let error):
                 print(error)
@@ -115,12 +126,27 @@ struct AllContactsView: View {
 }
 
 func fetchContacts(
-    onProgressUpdate: @escaping (_ current: Double, _ total: Double, _ contacts: [ContactList.Contact]) -> Void
+    onProgressUpdate: @escaping (_ current: Int, _ total: Int, _ contacts: [ContactList.Contact]) -> Void
 ) async -> Result<[ContactList.Contact], RequestError> {
     guard let siteNumber = UserManager.shared.currentUser?.siteNumber else {
         return .failure(RequestError.custom("No site number"))
     }
     
+    // tell calling function how many records we're aiming for
+    var totalRecords: Int = 0
+    let contactsResult = await ACSService().getContacts(
+        siteNumber: siteNumber,
+        pageIndex: 1,
+        pageSize: 1
+    )
+    switch contactsResult {
+    case .success(let contactsResponse):
+        totalRecords = contactsResponse.PageCount
+        onProgressUpdate(0, totalRecords, [])
+    case .failure(let error):
+        return .failure(error)
+    }
+
     var pageSize = UserDefaults.standard.integer(forKey: "fetchContactsPageSize")
     if pageSize == 0 { pageSize = 500 }
     
@@ -141,7 +167,7 @@ func fetchContacts(
             totalPages = contactsResponse.PageCount
             pageIndex += 1
             
-            onProgressUpdate(Double(pageIndex * pageSize), Double(totalPages * pageSize), contactsResponse.Page)
+            onProgressUpdate(pageIndex * pageSize, totalRecords, contactsResponse.Page)
         case .failure(let error):
             return .failure(error)
         }

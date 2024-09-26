@@ -6,21 +6,24 @@
 //
 
 import Foundation
-import SwiftData
+import Blackbird
 
-@Model
-class Phone: Identifiable {
-    @Attribute(.unique)
-    var phoneId: Int
-    var phoneType: String?
-    var phoneTypeId: Int?
-    var preferred: Bool?
-    var phoneNumber: String?
-    var listed: Bool?
-    var familyPhone: Bool?
-    var phoneExtension: String?
-    var addrPhone: Bool?
-    var phoneRef: String?
+struct Phone: BlackbirdModel, Identifiable {
+    static var primaryKey: [BlackbirdColumnKeyPath] = [ \.$phoneId ]
+    
+    //Contact
+    @BlackbirdColumn var indvId: Int
+
+    @BlackbirdColumn var phoneId: Int
+    @BlackbirdColumn var phoneType: String?
+    @BlackbirdColumn var phoneTypeId: Int?
+    @BlackbirdColumn var preferred: Bool?
+    @BlackbirdColumn var phoneNumber: String?
+    @BlackbirdColumn var listed: Bool?
+    @BlackbirdColumn var familyPhone: Bool?
+    @BlackbirdColumn var phoneExtension: String?
+    @BlackbirdColumn var addrPhone: Bool?
+    @BlackbirdColumn var phoneRef: String?
     
     var searchablePhoneNumber: String {
         return (phoneNumber ?? "")
@@ -30,72 +33,18 @@ class Phone: Identifiable {
             .replacingOccurrences(of: ".", with: "")
             .replacingOccurrences(of: " ", with: "")
     }
-    
-    init(
-        phoneId: Int,
-        phoneType: String?,
-        phoneTypeId: Int?,
-        preferred: Bool?,
-        phoneNumber: String?,
-        listed: Bool?,
-        familyPhone: Bool?,
-        phoneExtension: String?,
-        addrPhone: Bool?,
-        phoneRef: String?
-    ) {
-        self.phoneId = phoneId
-        self.phoneType = phoneType
-        self.phoneTypeId = phoneTypeId
-        self.preferred = preferred
-        self.phoneNumber = phoneNumber
-        self.listed = listed
-        self.familyPhone = familyPhone
-        self.phoneExtension = phoneExtension
-        self.addrPhone = addrPhone
-        self.phoneRef = phoneRef
-    }
-    
-    init(from apiResponse: IndividualContactResponse.Phone) {
-        self.phoneId = apiResponse.PhoneId
-        self.phoneType = apiResponse.PhoneType
-        self.phoneTypeId = apiResponse.PhoneTypeId
-        self.preferred = apiResponse.Preferred
-        self.phoneNumber = apiResponse.PhoneNumber
-        self.listed = apiResponse.Listed
-        self.familyPhone = familyPhone
-        self.phoneExtension = phoneExtension
-        self.addrPhone = addrPhone
-        self.phoneRef = phoneRef
-    }
-    
-    func update(with apiResponse: IndividualContactResponse.Phone) {
-        self.phoneId = apiResponse.PhoneId
-        self.phoneType = apiResponse.PhoneType
-        self.phoneTypeId = apiResponse.PhoneTypeId
-        self.preferred = apiResponse.Preferred
-        self.phoneNumber = apiResponse.PhoneNumber
-        self.listed = apiResponse.Listed
-        self.familyPhone = familyPhone
-        self.phoneExtension = phoneExtension
-        self.addrPhone = addrPhone
-        self.phoneRef = phoneRef
-    }
-    
-    @MainActor static func createOrUpdate(
-        from apiPhone: IndividualContactResponse.Phone
-    ) -> Phone {
-        let fetchDescriptor = FetchDescriptor<Phone>(
-            predicate: #Predicate<Phone> { $0.phoneId == apiPhone.PhoneId }
-        )
-        let context = SwiftDataManager.shared.container.mainContext
-        let phones = try? context.fetch(fetchDescriptor)
-        
-        if let finalPhone = (phones ?? []).first {
-            finalPhone.update(with: apiPhone)
-            return finalPhone
-        } else {
-            return .init(from: apiPhone)
-        }
-    }
 
+    init(from apiResponse: IndividualContactResponse.Phone, for indvId: Int) {
+        self.indvId = indvId
+        self.phoneId = apiResponse.PhoneId
+        self.phoneType = apiResponse.PhoneType
+        self.phoneTypeId = apiResponse.PhoneTypeId
+        self.preferred = apiResponse.Preferred
+        self.phoneNumber = apiResponse.PhoneNumber
+        self.listed = apiResponse.Listed
+        self.familyPhone = familyPhone
+        self.phoneExtension = phoneExtension
+        self.addrPhone = addrPhone
+        self.phoneRef = phoneRef
+    }
 }

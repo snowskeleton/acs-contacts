@@ -7,9 +7,24 @@
 
 import SwiftUI
 import ContactsUI
+import Blackbird
 
 struct SingleContactView: View {
-    @State var contact: Contact
+    @Environment(\.blackbirdDatabase) var db
+    
+    @BlackbirdLiveModel var contact: Contact?
+    @State private var contactId: Int? = nil
+    
+    @BlackbirdLiveModels<Address> var addresses: Blackbird.LiveResults<Address>
+    @BlackbirdLiveModels<Phone> var phones: Blackbird.LiveResults<Phone>
+    @BlackbirdLiveModels<Email> var emails: Blackbird.LiveResults<Email>
+
+    init(contact: Contact) {
+        _contact = contact.liveModel
+        _addresses = BlackbirdLiveModels<Address>({ try await Address.read(from: $0, matching: \.$indvId == contact.indvId, orderBy: .ascending(\.$addrId)) })
+        _phones = BlackbirdLiveModels<Phone>({ try await Phone.read(from: $0, matching: \.$indvId == contact.indvId, orderBy: .ascending(\.$phoneId)) })
+        _emails = BlackbirdLiveModels<Email>({ try await Email.read(from: $0, matching: \.$indvId == contact.indvId, orderBy: .ascending(\.$emailId)) })
+    }
     
     @State private var errorMessage: String?
     @State private var isLoading = false
@@ -25,93 +40,102 @@ struct SingleContactView: View {
     
     var body: some View {
         VStack {
-            HStack {
-                if !(contact.pictureUrl ?? "").isEmpty {
-                    ProfilePhoto(contact: contact)
-                }
-                Text(contact.displayName)
-                    .font(.title)
-                Spacer()
-                Button {
-                    addContact()
-                } label: {
-                    Image(systemName:
-                            addedContact
-                          ? "person.crop.circle.fill.badge.checkmark"
-                          : "person.crop.circle.fill.badge.plus"
-                    )
-                    .font(.title)
-                }
-            }
-            .padding()
-            List {
-                if let dateOfBirth = contact.dateOfBirth, !dateOfBirth.isEmpty {
-                    Section("Birthday") {
-                        Text("Date of Birth: \(dateOfBirth)")
+            if let contact {
+                HStack {
+                    if !(contact.pictureUrl ?? "").isEmpty {
+                        ProfilePhoto(contact: contact)
+                    }
+                    Text(contact.displayName)
+                        .font(.title)
+                    Spacer()
+                    Button {
+                        addContact()
+                    } label: {
+                        Image(systemName:
+                                addedContact
+                              ? "person.crop.circle.fill.badge.checkmark"
+                              : "person.crop.circle.fill.badge.plus"
+                        )
+                        .font(.title)
                     }
                 }
-                
-                if !contact.phones.isEmpty {
-                    Section("Phone\(contact.phones.count > 1 ? "s" : "")") {
-                        ForEach(contact.phones, id: \.self) { phone in
-                            if let number = phone.phoneNumber {
-                                Button {
-                                    UIPasteboard.general.string = number
-                                } label: {
-                                    HStack {
-                                        Text(number)
-                                        Spacer()
-                                        if phone.preferred == true && contact.phones.count > 1 {
-                                            Image(systemName: "checkmark")
+                .padding()
+                List {
+                    if let dateOfBirth = contact.dateOfBirth, !dateOfBirth.isEmpty {
+                        Section("Birthday") {
+                            Text("Date of Birth: \(dateOfBirth)")
+                        }
+                    }
+                    
+                    if !phones.results.isEmpty {
+                        Section("Phone\(phones.results.count > 1 ? "s" : "")") {
+                            ForEach(phones.results, id: \.self) { phone in
+                                if let number = phone.phoneNumber {
+                                    Button {
+                                        UIPasteboard.general.string = number
+                                    } label: {
+                                        HStack {
+                                            Text(number)
+                                            Spacer()
+                                            if phone.preferred == true && phones.results.count > 1 {
+                                                Image(systemName: "checkmark")
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
                     }
-                }
-                
-                if !contact.addresses.isEmpty {
-                    Section("Address\(contact.addresses.count > 1 ? "es" : "")") {
-                        ForEach(contact.addresses, id: \.self) { address in
-                            HStack {
-                                Text(address.addressString)
-                                Spacer()
-                                if address.activeAddress == true && contact.addresses.count > 1 {
-                                    Image(systemName: "checkmark")
+                    
+                    if !addresses.results.isEmpty {
+                        Section(
+                            "Address\(addresses.results.count > 1 ? "es" : "")"
+                        ) {
+                            ForEach(addresses.results, id: \.self) { address in
+                                HStack {
+                                    Text(address.addressString)
+                                    Spacer()
+                                    if address.activeAddress == true && addresses.results.count > 1 {
+                                        Image(systemName: "checkmark")
+                                    }
                                 }
                             }
                         }
                     }
-                }
-                
-                if !contact.emails.isEmpty {
-                    Section("Email\(contact.emails.count > 1 ? "s" : "")") {
-                        ForEach(contact.emails, id: \.self) { email in
-                            HStack {
-                                Text(email.email ?? "Unknown")
-                                Spacer()
-                                if email.preferred == true && contact.emails.count > 1 {
-                                    Image(systemName: "checkmark")
+                    
+                    if !emails.results.isEmpty {
+                        Section("Email\(emails.results.count > 1 ? "s" : "")") {
+                            ForEach(emails.results, id: \.self) { email in
+                                HStack {
+                                    Text(email.email ?? "Unknown")
+                                    Spacer()
+                                    if email.preferred == true && emails.results.count > 1 {
+                                        Image(systemName: "checkmark")
+                                    }
                                 }
                             }
                         }
                     }
+                    
+//                    if !contact.familyMembers.isEmpty {
+//                        Section("Family Member\(contact.familyMembers.count > 1 ? "s" : "")") {
+//                            ForEach(
+//                                contact.familyMembers,
+//                                id: \.self
+//                            ) { familyMember in
+//                                if familyMember != contact {
+//                                    NavigationLink {
+//                                        SingleContactView(contact: familyMember)
+//                                    } label: {
+//                                        Text(familyMember.displayName)
+//                                    }
+//                                }
+//                            }
+//                        }
+//                    }
                 }
-                
-                if !contact.familyMembers.isEmpty {
-                    Section("Family Member\(contact.familyMembers.count > 1 ? "s" : "")") {
-                        ForEach(contact.familyMembers, id: \.self) { familyMember in
-                            if familyMember != contact {
-                                NavigationLink {
-                                    SingleContactView(contact: familyMember)
-                                } label: {
-                                    Text(familyMember.displayName)
-                                }
-                            }
-                        }
-                    }
-                }
+            } else {
+                ProgressView()
             }
         }
         .onAppear {
@@ -128,83 +152,114 @@ struct SingleContactView: View {
     
     private func fetchContact() {
         Task {
-            let result = await ACSService().getIndividualContact(siteNumber: siteNumber, indvId: contact.indvId.description)
-            
-            switch result {
-            case .success(let contactResponse):
-                Task.detached {
-                    let actor = SwiftDataActor(modelContainer: SwiftDataManager.shared.container)
-                    await actor.createContact(contactResponse)
+            if let contact {
+                let result = await ACSService().getIndividualContact(siteNumber: siteNumber, indvId: contact.indvId.description)
+                
+                switch result {
+                case .success(let contactResponse):
+                    Task.detached {
+                        do {
+                            let contact = Contact(from: contactResponse)
+                            try await contact.write(to: db!)
+                            
+                            for remoteAddress in contactResponse.Addresses {
+                                let address = Address(from: remoteAddress, for: contact.indvId)
+                                try await address.write(to: db!)
+                            }
+                            
+                            for remoteEmail in contactResponse.Emails {
+                                let email = Email(from: remoteEmail, for: contact.indvId)
+                                try await email.write(to: db!)
+                            }
+                            
+                            for remotePhone in contactResponse.Phones {
+                                let phone = Phone(from: remotePhone, for: contact.indvId)
+                                try await phone.write(to: db!)
+                            }
+                            
+                        } catch {
+                            print("Failed to create contact: \(error)")
+                        }
+                    }
+                case .failure(let error):
+                    alertAlertTitle = "Failed to fetch contact"
+                    alertAlertMessage = error.customMessage
+                    showAlert = true
                 }
-            case .failure(let error):
-                alertAlertTitle = "Failed to fetch contact"
-                alertAlertMessage = error.customMessage
-                showAlert = true
+            } else {
+                print("we have a problem")
             }
         }
     }
     
     private func addContact() {
         Task {
-            withAnimation {
-                addedContact = true
-            }
-            
-            let store = CNContactStore()
-            let saveableContact = CNMutableContact()
-            
-            saveableContact.givenName = contact.firstName ?? ""
-            saveableContact.middleName = contact.middleName ?? ""
-            saveableContact.familyName = contact.lastName ?? ""
-            
-            saveableContact.phoneNumbers = contact.phones.filter {
-                $0.phoneNumber != nil
-            }.map {
-                CNLabeledValue(
-                    label: $0.phoneType != nil ? $0.phoneType : CNLabelPhoneNumberMobile,
-                    value: CNPhoneNumber(stringValue: $0.phoneNumber!)
-                )
-            }
-            
-            saveableContact.postalAddresses = contact.addresses.filter {
-                $0.addressLine1 != nil
-            }.map { address in
-                let postalAddress = CNMutablePostalAddress()
+            if let contact {
+                withAnimation {
+                    addedContact = true
+                }
                 
-                postalAddress.street = [address.addressLine1, address.addressLine2].compactMap { $0 }.joined(separator: "\n")
-                postalAddress.city = address.city ?? ""
-                postalAddress.state = address.state ?? ""
-                postalAddress.postalCode = address.zipcode ?? ""
-                postalAddress.country = address.country ?? ""
+                let store = CNContactStore()
+                let saveableContact = CNMutableContact()
                 
-                return CNLabeledValue(
-                    label: address.addrType ?? CNLabelHome,
-                    value: postalAddress
-                )
+                saveableContact.givenName = contact.firstName ?? ""
+                saveableContact.middleName = contact.middleName ?? ""
+                saveableContact.familyName = contact.lastName ?? ""
+                
+                saveableContact.phoneNumbers = phones.results.filter {
+                    $0.phoneNumber != nil
+                }.map {
+                    CNLabeledValue(
+                        label: $0.phoneType != nil ? $0.phoneType : CNLabelPhoneNumberMobile,
+                        value: CNPhoneNumber(stringValue: $0.phoneNumber!)
+                    )
+                }
+                
+                saveableContact.postalAddresses = addresses.results.filter {
+                    $0.addressLine1 != nil
+                }.map { address in
+                    let postalAddress = CNMutablePostalAddress()
+                
+                    postalAddress.street = [
+                        address.addressLine1,
+                        address.addressLine2
+                    ]
+                        .compactMap { $0 }
+                        .joined(separator: "\n")
+                    postalAddress.city = address.city ?? ""
+                    postalAddress.state = address.state ?? ""
+                    postalAddress.postalCode = address.zipcode ?? ""
+                    postalAddress.country = address.country ?? ""
+                
+                    return CNLabeledValue(
+                        label: address.addrType ?? CNLabelHome,
+                        value: postalAddress
+                    )
+                }
+                
+                saveableContact.emailAddresses = emails.results.filter {
+                    $0.email != nil
+                }.map { email in
+                    CNLabeledValue(
+                        label: email.emailType ?? CNLabelHome,
+                        value: email.email! as NSString
+                    )
+                }
+                
+                if let pictureUrlString = contact.pictureUrl,
+                   let pictureUrl = URL(string: pictureUrlString),
+                   let imageData = await fetchImageData(from: pictureUrl) {
+                    saveableContact.imageData = imageData
+                }
+                
+                let saveRequest = CNSaveRequest()
+                saveRequest.add(saveableContact, toContainerWithIdentifier: nil)
+                try? store.execute(saveRequest)
+                
+                alertAlertTitle = "Contact Saved!"
+                alertAlertMessage = ""
+                showAlert = true
             }
-            
-            saveableContact.emailAddresses = contact.emails.filter {
-                $0.email != nil
-            }.map { email in
-                CNLabeledValue(
-                    label: email.emailType ?? CNLabelHome,
-                    value: email.email! as NSString
-                )
-            }
-            
-            if let pictureUrlString = contact.pictureUrl,
-               let pictureUrl = URL(string: pictureUrlString),
-               let imageData = await fetchImageData(from: pictureUrl) {
-                saveableContact.imageData = imageData
-            }
-            
-            let saveRequest = CNSaveRequest()
-            saveRequest.add(saveableContact, toContainerWithIdentifier: nil)
-            try? store.execute(saveRequest)
-            
-            alertAlertTitle = "Contact Saved!"
-            alertAlertMessage = ""
-            showAlert = true
         }
     }
 }

@@ -1,0 +1,3 @@
+[submodule "Blackbird"]
+	path = Blackbird
+	url = https://github.com/marcoarment/Blackbird.git

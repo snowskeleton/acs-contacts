@@ -6,44 +6,23 @@
 //
 
 import Foundation
-import SwiftData
+import Blackbird
 
-@Model
-class Email: Identifiable {
-    @Attribute(.unique)
-    var emailId: Int
-    var emailType: String?
-    var emailTypeId: Int?
-    var preferred: Bool?
-    var email: String?
-    var listed: Bool?
+struct Email: BlackbirdModel, Identifiable {
+    static var primaryKey: [BlackbirdColumnKeyPath] = [ \.$emailId ]
     
-    init(
-        emailId: Int,
-        emailType: String?,
-        emailTypeId: Int?,
-        preferred: Bool?,
-        email: String?,
-        listed: Bool?
-    ) {
-        self.emailId = emailId
-        self.emailType = emailType
-        self.emailTypeId = emailTypeId
-        self.preferred = preferred
-        self.email = email
-        self.listed = listed
-    }
+    //Contact
+    @BlackbirdColumn var indvId: Int
+
+    @BlackbirdColumn var emailId: Int
+    @BlackbirdColumn var emailType: String?
+    @BlackbirdColumn var emailTypeId: Int?
+    @BlackbirdColumn var preferred: Bool?
+    @BlackbirdColumn var email: String?
+    @BlackbirdColumn var listed: Bool?
     
-    init(from apiResponse: IndividualContactResponse.Email) {
-        self.emailId = apiResponse.EmailId
-        self.emailType = apiResponse.EmailType
-        self.emailTypeId = apiResponse.EmailTypeId
-        self.preferred = apiResponse.Preferred
-        self.email = apiResponse.Email
-        self.listed = apiResponse.Listed
-    }
-    
-    func update(with apiResponse: IndividualContactResponse.Email) {
+    init(from apiResponse: IndividualContactResponse.Email, for indvId: Int) {
+        self.indvId = indvId
         self.emailId = apiResponse.EmailId
         self.emailType = apiResponse.EmailType
         self.emailTypeId = apiResponse.EmailTypeId
