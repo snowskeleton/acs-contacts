@@ -1,0 +1,24 @@
+{
+  "originHash" : "d4734131939e5e5dc3bafa8f46b125a525e9c2c82806b343093fdf1c21a5b99f",
+  "pins" : [
+    {
+      "identity" : "aptabase-swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/aptabase/aptabase-swift",
+      "state" : {
+        "revision" : "73579250784f7040aad28ec376a0ddfcdaa171cf",
+        "version" : "0.3.10"
+      }
+    },
+    {
+      "identity" : "blackbird",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/marcoarment/Blackbird",
+      "state" : {
+        "branch" : "main",
+        "revision" : "f894c00ddc99a9b73ecdfcf9765e8893f95c3664"
+      }
+    }
+  ],
+  "version" : 3
+}
