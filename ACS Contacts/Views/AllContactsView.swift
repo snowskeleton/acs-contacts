@@ -107,12 +107,12 @@ struct AllContactsView: View {
     
     private func saveContactsToModelContext() {
         Task {
+            progressViewLabel = "Downloading Contacts..."
+            showProgressView = true
             let result = await fetchContacts { progress, goal, _ in
                 progressViewProgress = progress
                 progressViewGoal = goal
             }
-            progressViewLabel = "Downloading Contacts..."
-            showProgressView = true
 
             switch result {
             case .success(let contacts):
