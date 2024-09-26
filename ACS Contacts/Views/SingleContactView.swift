@@ -13,8 +13,8 @@ struct SingleContactView: View {
     @Environment(\.blackbirdDatabase) var db
     
     @BlackbirdLiveModel var contact: Contact?
-    @State private var contactId: Int? = nil
     
+    @BlackbirdLiveModels<Contact> var family: Blackbird.LiveResults<Contact>
     @BlackbirdLiveModels<Address> var addresses: Blackbird.LiveResults<Address>
     @BlackbirdLiveModels<Phone> var phones: Blackbird.LiveResults<Phone>
     @BlackbirdLiveModels<Email> var emails: Blackbird.LiveResults<Email>
@@ -24,10 +24,14 @@ struct SingleContactView: View {
         _addresses = BlackbirdLiveModels<Address>({ try await Address.read(from: $0, matching: \.$indvId == contact.indvId, orderBy: .ascending(\.$addrId)) })
         _phones = BlackbirdLiveModels<Phone>({ try await Phone.read(from: $0, matching: \.$indvId == contact.indvId, orderBy: .ascending(\.$phoneId)) })
         _emails = BlackbirdLiveModels<Email>({ try await Email.read(from: $0, matching: \.$indvId == contact.indvId, orderBy: .ascending(\.$emailId)) })
+        _family = BlackbirdLiveModels<Contact>({
+            try await Contact.read(
+                from: $0,
+                matching: \.$famId == contact.famId && \.$indvId != contact.indvId,
+                orderBy: .ascending(\.$firstName)
+            )
+        })
     }
-    
-    @State private var errorMessage: String?
-    @State private var isLoading = false
     
     @AppStorage("siteNumber") var siteNumber: String = ""
     @State private var addedContact = false
@@ -117,22 +121,18 @@ struct SingleContactView: View {
                         }
                     }
                     
-//                    if !contact.familyMembers.isEmpty {
-//                        Section("Family Member\(contact.familyMembers.count > 1 ? "s" : "")") {
-//                            ForEach(
-//                                contact.familyMembers,
-//                                id: \.self
-//                            ) { familyMember in
-//                                if familyMember != contact {
-//                                    NavigationLink {
-//                                        SingleContactView(contact: familyMember)
-//                                    } label: {
-//                                        Text(familyMember.displayName)
-//                                    }
-//                                }
-//                            }
-//                        }
-//                    }
+                    if !family.results.isEmpty {
+                        Text(family.results.count.description)
+                        Section("Family Member\(family.results.count > 1 ? "s" : "")") {
+                            ForEach(family.results, id: \.self) { familyMember in
+                                NavigationLink {
+                                    SingleContactView(contact: familyMember)
+                                } label: {
+                                    Text(familyMember.displayName)
+                                }
+                            }
+                        }
+                    }
                 }
             } else {
                 ProgressView()
