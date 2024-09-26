@@ -122,7 +122,6 @@ struct SingleContactView: View {
                     }
                     
                     if !family.results.isEmpty {
-                        Text(family.results.count.description)
                         Section("Family Member\(family.results.count > 1 ? "s" : "")") {
                             ForEach(family.results, id: \.self) { familyMember in
                                 NavigationLink {
