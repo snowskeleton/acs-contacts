@@ -8,21 +8,6 @@
 import SwiftUI
 import SwiftData
 import Aptabase
-import Blackbird
-import Blackbird
-
-class DatabaseManager: ObservableObject {
-    static let shared = DatabaseManager()
-    
-    @Published var database: Blackbird.Database?
-    private var databasePath: String
-    
-    private init() {
-        let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        databasePath = documentsDirectory.appendingPathComponent("contacts.sqlite").path
-        database = try! Blackbird.Database(path: databasePath)
-    }
-}
 
 @main
 struct ACS_ContactsApp: App {
@@ -41,7 +26,13 @@ struct ACS_ContactsApp: App {
             ContentView()
         }
         .environment(\.blackbirdDatabase, databaseManager.database)
-        .backgroundTask(.appRefresh("contactListDownload")) {
+        .onChange(of: phase) { _, newPhase in
+            if newPhase == .background {
+                Task {
+                    scheduleAppRefresh()
+                }
+            }
+        }        .backgroundTask(.appRefresh("contactListDownload")) {
             await fetchContactsInBackground()
         }
     }
