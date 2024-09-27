@@ -3,7 +3,7 @@
 //  ACS Contacts
 //
 //  Created by snow on 9/27/24.
-//  https://stackoverflow.com/a/65186275/13919791
+//  https://stackoverflow.com/a/69755635/13919791
 //
 
 
@@ -14,97 +14,193 @@ import Blackbird
 struct ListContactsView: View {
     @Environment(\.blackbirdDatabase) var db
 
-    @BlackbirdLiveModels var contacts: Blackbird.LiveResults<Contact>
-//    @BlackbirdLiveModels var phones: Blackbird.LiveResults<Phone>
+    @BlackbirdLiveModels({ try await Contact.read(from: $0, orderBy: .ascending(\.$lastName)) }) var contacts
+    @BlackbirdLiveModels({ try await Phone.read(from: $0) }) var phones
+//    @BlackbirdLiveModels var contacts: Blackbird.LiveResults<Contact>
     @Binding var searchText: String
     
     init(searchText: Binding<String>) {
         _searchText = searchText
-        // this method is performant, but can't search phone numbers
-        _contacts = BlackbirdLiveModels<Contact> { db in
-//            if searchText.wrappedValue.isEmpty {
-//                return try await Contact.read(from: db, orderBy: .ascending(\.$lastName))
-//            } else {
-                let queryText = "%" + searchText.wrappedValue.lowercased() + "%" // Search pattern with wildcards
-                return try await Contact.read(from: db, sqlWhere: "LOWER(displayName) LIKE ? OR LOWER(fullName) LIKE ? ORDER BY lastName", queryText)
-//            }
-        }
-
-        // this method can search phone numbers, but doesn't perform very well
-//        _contacts = BlackbirdLiveModels<Contact> { try await Contact.read(from: $0, orderBy: .ascending(\.$lastName)) }
-//        _phones = BlackbirdLiveModels<Phone> { try await Phone.read(from: $0) }
+//        _contacts = BlackbirdLiveModels<Contact> { db in
+//            let queryText = "%" + searchText.wrappedValue.lowercased() + "%"
+//            return try await Contact.read(
+//                from: db,
+//                sqlWhere: "LOWER(displayName) LIKE ? OR LOWER(fullName) LIKE ? ORDER BY lastName",
+//                queryText
+//            )
+//        }
+        
     }
     
     var presentableContacts: [Contact] {
         if searchText.isEmpty {
             return contacts.results
         } else {
-//            let filteredPhones = phones.results.filter { phone in
-//                phone.searchablePhoneNumber.lowercased().contains(searchText.lowercased())
-//            }
+            let matchingPhones = phones.results.filter { phone in
+                phone.searchablePhoneNumber.lowercased().contains(searchText.lowercased())
+            }
+            
+            let matchingIndvIds = Set(matchingPhones.map { $0.indvId })
+            
             return contacts.results.filter { contact in
-                let nameMatches = contact.displayName.lowercased().contains(searchText.lowercased())
-//                let phoneMatches = filteredPhones.contains { $0.indvId == contact.indvId }
-                return nameMatches //|| phoneMatches
+                contact.displayName.lowercased().contains(searchText.lowercased()) ||
+                matchingIndvIds.contains(contact.indvId)
             }
         }
     }
-    let alphaRange = (0..<26).map({Character(UnicodeScalar("a".unicodeScalars.first!.value + $0)!)})
-    var filteredAlphaRange: [Character]  {
-        let availableLetters = Set(contacts.results
-            .compactMap {
-                ($0.lastName ?? $0.firstName ?? $0.displayName).first?.lowercased().first
-            }
-        )
-        return alphaRange.filter { availableLetters.contains($0) }
-    }
-
+    
     var body: some View {
-            ScrollViewReader { value in
-                ZStack {
-                    List {
-                        ForEach(alphaRange, id: \.self) { letter in
-                            let contactsWithLetter = contacts.results
+        ScrollViewReader { scrollView in
+            HStack {
+                ScrollView {
+                    LazyVStack(pinnedViews: .sectionHeaders) {
+                        ForEach(String.alphabeta, id: \.self) { letter in
+                            let contactsWithLetter = presentableContacts
                                 .filter {
                                     ($0.lastName ?? $0.firstName ?? $0.displayName)
                                         .lowercased()
-                                        .hasPrefix(letter.description)
+                                        .hasPrefix(letter.description.lowercased())
                                 }
                             if !contactsWithLetter.isEmpty {
-                                Section(letter.description) {
+                                Section {
                                     ForEach(contactsWithLetter, id: \.self) { contact in
                                         NavigationLink {
                                             SingleContactView(contact: contact)
                                         } label: {
-                                            Text(contact.displayName)
-                                        }
+                                            HStack {
+                                                Text(contact.displayName)
+                                                    .padding(.leading)
+                                                Spacer()
+                                            }
+                                            .foregroundStyle(Color.primary)
+                                        }.id(contact.indvId)
+                                        Divider()
                                     }
+                                } header: {
+                                    HStack {
+                                        Text(letter.description)
+                                            .font(.headline)
+                                            .bold()
+                                            .padding(.leading, 9)
+                                        Spacer()
+                                    }
+                                    Divider()
                                 }
+                                .id(letter.description.uppercased())
                             }
                         }
                     }
-                    HStack {
-                        Spacer()
-                        VStack {
-                            ForEach(filteredAlphaRange.indices, id: \.self) { index in
-                                Button(action: {
-                                    withAnimation {
-                                        value.scrollTo(filteredAlphaRange[index])
-                                    }
-                                }) {
-                                    Text(filteredAlphaRange[index].uppercased())
-                                        .font(.system(size: 12))
-                                        .padding(.vertical, 1)
-                                }
-                            }
-                        }
+                }
+               
+                SectionIndexTitles(proxy: scrollView, titles: retrieveSectionTitles())
+                    .font(.footnote)
+                    .padding(.trailing, 5)
+                    .background(Color.clear)
+                    .contentShape(Rectangle())
+            }
+        }
+        .scrollIndicators(.hidden)
+    }
+    
+    func retrieveSectionTitles() ->[String] {
+        var titles = [String]()
+        titles.append("@")
+        for item in self.contacts.results {
+            let name = (item.lastName ?? item.firstName ?? item.displayName)
+            if !name.starts(with: titles.last!){
+                titles.append(String(name.first!))
+            }
+        }
+        titles.remove(at: 0)
+        if titles.count > 1 && titles.first! == "#" {
+            titles.append("#")
+            titles.removeFirst(1)
+        }
+        return titles
+    }
+}
+
+
+struct SectionIndexTitles: View {
+    class IndexTitleState: ObservableObject {
+        var currentTitleIndex = 0
+        var titleSize: CGSize = .zero
+    }
+    
+    let proxy: ScrollViewProxy
+    let titles: [String]
+    @GestureState private var dragLocation: CGPoint = .zero
+    @StateObject var indexState = IndexTitleState()
+    
+    var body: some View {
+        VStack {
+            ForEach(titles, id: \.self) { title in
+                Text(title)
+                    .foregroundColor(.blue)
+                    .modifier(SizeModifier())
+                    .onPreferenceChange(SizePreferenceKey.self) {
+                        self.indexState.titleSize = $0
+                    }
+                    .onTapGesture {
+                        proxy.scrollTo(title, anchor: .top)
                     }
             }
         }
-//        Button("Update All") {
-//            Task {
-//                await Contact.updateAll(db!, contacts.results)
-//            }
-//        }
+        .gesture(
+            DragGesture(minimumDistance: indexState.titleSize.height, coordinateSpace: .named(titles.first))
+                .updating($dragLocation) { value, state, _ in
+                    state = value.location
+                    scrollTo(location: state)
+                }
+        )
+    }
+    
+    private func scrollTo(location: CGPoint){
+        if self.indexState.titleSize.height > 0{
+            let index = Int(location.y / self.indexState.titleSize.height)
+            if index >= 0 && index < titles.count {
+                if indexState.currentTitleIndex != index {
+                    indexState.currentTitleIndex = index
+                    let impactMed = UIImpactFeedbackGenerator(style: .medium)
+                    impactMed.impactOccurred()
+                    DispatchQueue.main.async {
+                        withAnimation {
+                            proxy.scrollTo(titles[indexState.currentTitleIndex], anchor: .top)
+                        }
+                    }
+                }
+            }
+        }
     }
 }
+
+struct SizePreferenceKey: PreferenceKey {
+    static var defaultValue: CGSize = .zero
+    
+    static func reduce(value: inout CGSize, nextValue: () -> CGSize) {
+        value = nextValue()
+    }
+}
+
+struct SizeModifier: ViewModifier {
+    private var sizeView: some View {
+        GeometryReader { geometry in
+            Color.clear.preference(key: SizePreferenceKey.self, value: geometry.size)
+        }
+    }
+    
+    func body(content: Content) -> some View {
+        content.background(sizeView)
+    }
+}
+
+extension String {
+    static var alphabeta: [String] {
+        var chars = [String]()
+        for char in "abcdefghijklmnopqrstuvwxyz#".uppercased() {
+            chars.append(String(char))
+        }
+        return chars
+    }
+}
+
