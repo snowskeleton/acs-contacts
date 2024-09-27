@@ -57,21 +57,22 @@ struct ListContactsView: View {
                 ZStack {
                     List {
                         ForEach(alphaRange, id: \.self) { letter in
-                            Section(letter.description) {
-                                ForEach(
-                                    contacts.results
-                                        .filter {
-                                            ($0.lastName ?? $0.firstName ?? $0.displayName)
-                                            .lowercased()
-                                            .hasPrefix(letter.description)
-                                        },
-                                    id: \.self) { contact in
+                            let contactsWithLetter = contacts.results
+                                .filter {
+                                    ($0.lastName ?? $0.firstName ?? $0.displayName)
+                                    .lowercased()
+                                    .hasPrefix(letter.description)
+                                }
+                            if !contactsWithLetter.isEmpty {
+                                Section(letter.description) {
+                                    ForEach(contactsWithLetter, id: \.self) { contact in
                                         NavigationLink {
                                             SingleContactView(contact: contact)
                                         } label: {
                                             Text(contact.displayName)
                                         }
                                     }
+                                }
                             }
                         }
                     }
