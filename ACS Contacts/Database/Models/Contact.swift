@@ -43,9 +43,7 @@ struct Contact: BlackbirdModel, Identifiable {
         self.goesByName = apiResponse.GoesByName
         self.suffix = apiResponse.Suffix
         self.displayName = {
-            if let goesByName = apiResponse.GoesByName, !goesByName.isEmpty {
-                return goesByName
-            } else if let firstName = apiResponse.FirstName, let lastName = apiResponse.LastName {
+            if let firstName = (apiResponse.GoesByName ?? apiResponse.FirstName), let lastName = apiResponse.LastName {
                 return "\(firstName) \(lastName)"
             } else if let firstName = apiResponse.FirstName {
                 return firstName
@@ -71,10 +69,10 @@ struct Contact: BlackbirdModel, Identifiable {
         self.fullName = apiResponse.FullName
         self.friendlyName = apiResponse.FriendlyName
         self.displayName = {
-            if let name = apiResponse.FriendlyName, !name.isEmpty {
-                return name
-            } else if let firstName = apiResponse.FirstName, let lastName = apiResponse.LastName {
+            if let firstName = (apiResponse.GoesbyName ?? apiResponse.FirstName), let lastName = apiResponse.LastName {
                 return "\(firstName) \(lastName)"
+            } else if let name = apiResponse.FriendlyName, !name.isEmpty {
+                return name
             } else if let firstName = apiResponse.FirstName {
                 return firstName
             } else {
