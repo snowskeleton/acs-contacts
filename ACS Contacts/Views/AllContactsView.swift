@@ -9,52 +9,7 @@ import SwiftUI
 import SwiftData
 import Blackbird
 
-struct ListContactsView: View {
-    @Environment(\.blackbirdDatabase) var db
 
-    @BlackbirdLiveModels var contacts: Blackbird.LiveResults<Contact>
-    @BlackbirdLiveModels var phones: Blackbird.LiveResults<Phone>
-    @Binding var searchText: String
-    
-    init(searchText: Binding<String>) {
-        _searchText = searchText
-        _contacts = BlackbirdLiveModels<Contact> { try await Contact.read(from: $0, orderBy: .ascending(\.$lastName)) }
-        _phones = BlackbirdLiveModels<Phone> { try await Phone.read(from: $0) }
-    }
-    
-    var presentableContacts: [Contact] {
-        if searchText.isEmpty {
-            return contacts.results
-        } else {
-            let filteredPhones = phones.results.filter { phone in
-                phone.searchablePhoneNumber.lowercased().contains(searchText.lowercased())
-            }
-            return contacts.results.filter { contact in
-                let nameMatches = contact.displayName.lowercased().contains(searchText.lowercased())
-                let phoneMatches = filteredPhones.contains { $0.indvId == contact.indvId }
-                return nameMatches || phoneMatches
-            }
-        }
-    }
-    var body: some View {
-        Button("Update All") {
-            Task {
-                let contacts = try! await Contact.read(
-                    from: db!,
-                    sqlWhere: "true ORDER BY lastUpdated DESC LIMIT 100"
-                )
-//                await Contact.updateAll(db!, contacts.results)
-            }
-        }
-        List(presentableContacts, id: \.indvId) { contact in
-            NavigationLink {
-                SingleContactView(contact: contact)
-            } label: {
-                Text(contact.displayName)
-            }
-        }
-    }
-}
 
 struct AllContactsView: View {
     @Environment(\.modelContext) private var context

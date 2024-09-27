@@ -47,6 +47,7 @@ struct DeveloperMenuView: View {
                             try await db!.execute("DELETE FROM Phone;")
                             
                             contactsDownloaded = false
+//                            completedFullUpdate = false
                         } catch {
                             print("Failed to delete data: \(error)")
                         }
