@@ -82,8 +82,10 @@ struct ListContactsView: View {
                                             .font(.headline)
                                             .bold()
                                             .padding(.leading, 9)
+                                            .padding(.bottom, 2)
                                         Spacer()
                                     }
+                                    .background(Color.gray.opacity(0.5))
                                     Divider()
                                 }
                                 .id(letter.description.uppercased())
