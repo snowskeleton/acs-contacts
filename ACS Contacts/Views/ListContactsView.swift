@@ -50,9 +50,16 @@ struct ListContactsView: View {
         }
     }
     let alphaRange = (0..<26).map({Character(UnicodeScalar("a".unicodeScalars.first!.value + $0)!)})
+    var filteredAlphaRange: [Character]  {
+        let availableLetters = Set(contacts.results
+            .compactMap {
+                ($0.lastName ?? $0.firstName ?? $0.displayName).first?.lowercased().first
+            }
+        )
+        return alphaRange.filter { availableLetters.contains($0) }
+    }
 
     var body: some View {
-        ScrollView {
             ScrollViewReader { value in
                 ZStack {
                     List {
@@ -60,8 +67,8 @@ struct ListContactsView: View {
                             let contactsWithLetter = contacts.results
                                 .filter {
                                     ($0.lastName ?? $0.firstName ?? $0.displayName)
-                                    .lowercased()
-                                    .hasPrefix(letter.description)
+                                        .lowercased()
+                                        .hasPrefix(letter.description)
                                 }
                             if !contactsWithLetter.isEmpty {
                                 Section(letter.description) {
@@ -79,16 +86,19 @@ struct ListContactsView: View {
                     HStack {
                         Spacer()
                         VStack {
-                            ForEach(0..<alphaRange.count, id: \.self) { idx in
-                                Button("\(idx % 2 == 0 ? alphaRange[idx] : "\u{2022}")") {
+                            ForEach(filteredAlphaRange.indices, id: \.self) { index in
+                                Button(action: {
                                     withAnimation {
-                                        value.scrollTo(alphaRange[idx])
+                                        value.scrollTo(filteredAlphaRange[index])
                                     }
+                                }) {
+                                    Text(filteredAlphaRange[index].uppercased())
+                                        .font(.system(size: 12))
+                                        .padding(.vertical, 1)
                                 }
                             }
                         }
                     }
-                }
             }
         }
 //        Button("Update All") {
