@@ -198,11 +198,7 @@ struct SizeModifier: ViewModifier {
 
 extension String {
     static var alphabeta: [String] {
-        var chars = [String]()
-        for char in "abcdefghijklmnopqrstuvwxyz#".uppercased() {
-            chars.append(String(char))
-        }
-        return chars
+        return "abcdefghijklmnopqrstuvwxyz#".map { $0.uppercased() }
     }
 }
 
