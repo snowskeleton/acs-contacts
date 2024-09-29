@@ -54,7 +54,7 @@ struct ListContactsView: View {
             HStack {
                 ScrollView {
                     LazyVStack(pinnedViews: .sectionHeaders) {
-                        ForEach(String.alphabeta, id: \.self) { letter in
+                        ForEach("ABCDEFGHIJKLMNOPQRSTUVWXYZ#".map { $0 }, id: \.self) { letter in
                             let contactsWithLetter = presentableContacts
                                 .filter {
                                     ($0.lastName ?? $0.firstName ?? $0.displayName)
@@ -195,10 +195,3 @@ struct SizeModifier: ViewModifier {
         content.background(sizeView)
     }
 }
-
-extension String {
-    static var alphabeta: [String] {
-        return "abcdefghijklmnopqrstuvwxyz#".map { $0.uppercased() }
-    }
-}
-
