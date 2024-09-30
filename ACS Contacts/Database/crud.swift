@@ -8,6 +8,7 @@
 
 import SwiftUI
 import SwiftData
+import Blackbird
 
 func fetchContacts(
     onProgressUpdate: @escaping (_ current: Int, _ total: Int, _ contacts: [ContactList.Contact]) -> Void
@@ -60,7 +61,6 @@ func fetchContacts(
 }
 
 func fetchContactsInBackground() async {
-    scheduleAppRefresh()
     if let db = DatabaseManager.shared.database {
         
         switch await fetchContacts(onProgressUpdate: { _, _, _ in }) {
@@ -71,10 +71,9 @@ func fetchContactsInBackground() async {
             print("Failed to save contacts: \(error)")
         }
         
-        if !UserDefaults.standard.bool(forKey: "completedFullUpdate") {
-            let contacts = try! await Contact.read(from: db, orderBy: .descending(\.$lastUpdated))
+        let contacts = try! await Contact.read(from: db, matching: \.$isFullyUpdated == false, orderBy: .descending(\.$lastUpdated))
+        if !contacts.isEmpty {
             await Contact.updateAll(db, contacts)
-            UserDefaults.standard.set(true, forKey: "completedFullUpdate")
         } else {
             let contacts = try! await Contact.read(
                 from: db,
@@ -83,7 +82,6 @@ func fetchContactsInBackground() async {
             )
             await Contact.updateAll(db, contacts)
         }
-    } else {
-        print("We couldn't open the database")
     }
+    scheduleAppRefresh()
 }

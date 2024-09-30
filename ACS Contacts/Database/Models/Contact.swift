@@ -31,6 +31,7 @@ struct Contact: BlackbirdModel, Identifiable {
     @BlackbirdColumn var isCRPending: Bool?
     @BlackbirdColumn var displayName: String
     @BlackbirdColumn var lastUpdated: Date?
+    @BlackbirdColumn var isFullyUpdated: Bool = false
 
     init(from apiResponse: ContactList.Contact) {
         self.indvId = apiResponse.IndvId
@@ -87,6 +88,7 @@ struct Contact: BlackbirdModel, Identifiable {
         self.userIsLeaderOf = apiResponse.UserIsLeaderOf
         self.isCRPending = apiResponse.IsCRPending
         self.lastUpdated = Date()
+        self.isFullyUpdated = true
     }
     
     func update(_ db: Blackbird.Database, _ apiResponse: IndividualContactResponse) async {
