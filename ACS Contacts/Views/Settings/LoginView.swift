@@ -49,7 +49,7 @@ struct LoginView: View {
                     }
             }
             
-            if loggedIn {
+            if !email.isEmpty && !password.isEmpty {
                 HStack {
                     Image(systemName: "arrow.left.circle")
                     Button("Logout", role: .destructive) {
