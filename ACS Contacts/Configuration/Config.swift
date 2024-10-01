@@ -1,6 +1,6 @@
 //
 //  Config.swift
-//  OSTRich
+//  ACS Contacts
 //
 //  Created by snow on 9/7/24.
 //  https://stackoverflow.com/a/33830605/13919791

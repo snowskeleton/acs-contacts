@@ -1,6 +1,6 @@
 //
 //  LicenseView.swift
-//  OSTRich
+//  ACS Contacts
 //
 //  Created by snow on 9/2/24.
 //

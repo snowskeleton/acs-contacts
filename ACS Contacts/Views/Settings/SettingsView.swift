@@ -1,6 +1,6 @@
 //
 //  SettingsView.swift
-//  OSTRich
+//  ACS Contacts
 //
 //  Created by snow on 5/1/24.
 //
