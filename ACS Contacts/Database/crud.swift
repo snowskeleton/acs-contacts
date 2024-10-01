@@ -13,6 +13,8 @@ import Blackbird
 func fetchContacts(
     onProgressUpdate: @escaping (_ current: Int, _ total: Int, _ contacts: [ContactList.Contact]) -> Void
 ) async -> Result<[ContactList.Contact], RequestError> {
+    if UserDefaults.standard.bool(forKey: "isAppReviewTesting") { return .success([]) }
+
     guard let siteNumber = UserManager.shared.currentUser?.siteNumber else {
         return .failure(RequestError.custom("No site number"))
     }
@@ -61,6 +63,8 @@ func fetchContacts(
 }
 
 func fetchContactsInBackground() async {
+    if UserDefaults.standard.bool(forKey: "isAppReviewTesting") { return }
+
     if let db = DatabaseManager.shared.database {
         
         switch await fetchContacts(onProgressUpdate: { _, _, _ in }) {
@@ -84,4 +88,22 @@ func fetchContactsInBackground() async {
         }
     }
     scheduleAppRefresh()
+}
+
+func synchronousCatPhotoURL() -> String {
+    let semaphore = DispatchSemaphore(value: 0)
+    var result: String = ""
+    
+    Task {
+        switch await CatService().getCatURL() {
+        case .success(let payload):
+            result = payload.first?.url ?? ""
+        case .failure:
+            result = ""
+        }
+        semaphore.signal()  // Signal the semaphore when the task completes
+    }
+    
+    semaphore.wait()  // Wait for the async task to complete
+    return result  // Return the result after the async task finishes
 }

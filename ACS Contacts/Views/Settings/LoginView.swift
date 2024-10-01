@@ -18,8 +18,10 @@ struct LoginView: View {
     @AppStorage("loginPassword") var password = ""
     @AppStorage("siteNumber") var siteNumber: String = ""
     
-    @State private var alertErrorTitle: String = "Default error title"
-    @State private var alertErrorMessage: String = "Default error message"
+    @AppStorage("isAppReviewTesting") var isTesting: Bool = false
+    
+    @State private var alertTitle: String = "Default error title"
+    @State private var alertMessage: String = "Default error message"
     @State private var showAlert: Bool = false
     
     @State private var showProgressView: Bool = false
@@ -41,12 +43,6 @@ struct LoginView: View {
             Section {
                 Button("Login") { login() }
                     .disabled(requiredFieldsEmpty)
-                    .alert(isPresented: $showAlert) {
-                        Alert(
-                            title: Text(alertErrorTitle),
-                            message: Text(alertErrorMessage)
-                        )
-                    }
             }
             
             if !email.isEmpty && !password.isEmpty {
@@ -63,7 +59,21 @@ struct LoginView: View {
                     )
                 }
             }
-
+            
+            if email == AppStoreTesting.testString {
+                Button("Create fake data") {
+                    Task {
+                        isTesting = true
+                        showProgressView = true
+                        await contactsFromJson()
+                        alertTitle = "Fake data created"
+                        alertMessage = ""
+                        showAlert = true
+                        showProgressView = false
+                        
+                    }
+                }
+            }
             
             //            Section {
             //                if email.lowercased() == AppStoreTesting.testString {
@@ -74,6 +84,12 @@ struct LoginView: View {
             //                    }
             //                }
             //            }
+        }
+        .alert(isPresented: $showAlert) {
+            Alert(
+                title: Text(alertTitle),
+                message: Text(alertMessage)
+            )
         }
         .overlay {
             if showProgressView {
@@ -99,8 +115,8 @@ struct LoginView: View {
                 mode.wrappedValue.dismiss()
             case .failure(let error):
                 print(error)
-                alertErrorTitle = "Login Failed"
-                alertErrorMessage = error.customMessage
+                alertTitle = "Login Failed"
+                alertMessage = error.customMessage
                 showAlert = true
             }
             showProgressView = false
@@ -111,6 +127,8 @@ struct LoginView: View {
         UserManager.shared.logout()
         email = ""
         password = ""
-        showLogoutSuccessful = true
+        alertTitle = "Logout Successful!"
+        alertMessage = "Please login to continue using this app"
+        showAlert = true
     }
 }

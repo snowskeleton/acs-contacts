@@ -33,6 +33,7 @@ struct SingleContactView: View {
         })
     }
     
+    @AppStorage("isAppReviewTesting") var isTesting: Bool = false
     @AppStorage("siteNumber") var siteNumber: String = ""
     @State private var addedContact = false
     
@@ -151,6 +152,8 @@ struct SingleContactView: View {
     
     private func fetchContact() {
         Task {
+            if isTesting { return }
+            
             if let contact {
                 let result = await ACSService().getIndividualContact(siteNumber: siteNumber, indvId: contact.indvId.description)
                 

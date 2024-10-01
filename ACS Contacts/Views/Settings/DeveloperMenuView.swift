@@ -17,6 +17,7 @@ struct DeveloperMenuView: View {
     @AppStorage("fetchContactsPageSize") var pageSize = "500"
     @AppStorage("completedInitialDownload") var contactsDownloaded = false
     @AppStorage("completedFullUpdate") var completedFullUpdate = false
+    @AppStorage("isAppReviewTesting") var isTesting: Bool = false
 
     var body: some View {
         List {
@@ -26,7 +27,8 @@ struct DeveloperMenuView: View {
             }
             
             Toggle("Update all contacts in background", isOn: $contactsDownloaded)
-            
+            Toggle("Disable network calls for testing purposes", isOn: $isTesting)
+
             Section("Actions") {
                 Button("Crash!") { showCrashConfirmation = true }
                     .confirmationDialog(

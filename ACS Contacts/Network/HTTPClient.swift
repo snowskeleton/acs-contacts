@@ -138,9 +138,16 @@ extension HTTPClient {
                     UserDefaults.standard.set(true, forKey: "netowrkAuthorized")
                     return .success(
                         try JSONDecoder().decode(responseModel, from: data))
-                } catch {
-                    let serverError = try JSONSerialization.jsonObject(with: data, options: [])
-                    print("Error decoding response: \(serverError)")
+                } catch let decodeError {
+                    print("Error decoding response: \(decodeError)")
+                    
+                    // Optionally print the raw data if needed for more context
+                    if let jsonString = String(data: data, encoding: .utf8) {
+                        print("Raw JSON response: \(jsonString)")
+                    }
+
+//                    let serverError = try JSONSerialization.jsonObject(with: data, options: [])
+//                    print("Error decoding response: \(serverError)")
                     return .failure(.decode)
                 }
             case 400:

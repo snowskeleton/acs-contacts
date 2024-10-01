@@ -11,6 +11,8 @@ import SwiftUI
 
 struct SettingsView: View {
     @Environment(\.colorScheme) var colorScheme
+    
+    @AppStorage("switchPhotosWithCats") var switchPhotosWithCats: Bool = false
 
     var body: some View {
         NavigationStack {
@@ -67,6 +69,12 @@ struct SettingsView: View {
                             Text("Analytics")
                         }
                     }
+                }
+                
+                Section {
+                    Toggle("Switch photos with cats", isOn: $switchPhotosWithCats)
+                } footer: {
+                    Text("This WILL decrease your performance")
                 }
                 
                 if Config.appConfiguration != .AppStore {

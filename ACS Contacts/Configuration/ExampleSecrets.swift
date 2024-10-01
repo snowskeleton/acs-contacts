@@ -17,3 +17,7 @@
 //struct AppStoreTesting {
 //    static let testString = ""
 //}
+
+//struct CatAPI {
+//    static let key = ""
+//}

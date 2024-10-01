@@ -26,6 +26,7 @@ struct AllContactsView: View {
     @State private var progressViewGoal: Int = 0
     
     @AppStorage("completedInitialDownload") var contactsDownloaded = false
+    @AppStorage("isAppReviewTesting") var isTesting: Bool = false
     
     var body: some View {
         NavigationStack {
@@ -69,6 +70,7 @@ struct AllContactsView: View {
     
     private func saveContactsToModelContext() {
         Task {
+            if isTesting { return }
             progressViewLabel = "Downloading Contacts..."
             showProgressView = true
             let result = await fetchContacts { progress, goal, _ in

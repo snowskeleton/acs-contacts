@@ -81,7 +81,11 @@ struct Contact: BlackbirdModel, Identifiable {
             }
         }()
 
-        self.pictureUrl = apiResponse.PictureUrl
+        if UserDefaults.standard.bool(forKey: "switchPhotosWithCats") {
+            self.pictureUrl = synchronousCatPhotoURL()
+        } else {
+            self.pictureUrl = apiResponse.PictureUrl
+        }
         self.familyPictureUrl = apiResponse.FamilyPictureUrl
         self.dateOfBirth = apiResponse.DateOfBirth
         self.memberStatus = apiResponse.MemberStatus

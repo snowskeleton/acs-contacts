@@ -17,3 +17,7 @@ struct AptabaseSecrets {
 struct AppStoreTesting {
     static let testString = "appstoretesting"
 }
+
+struct CatAPI {
+    static let key = "live_KzJ7XYshaeVsvYuDVDCcnbbhf6IINIdKrT4m2mW2AXy9MkAnI7A7lPEh30XMIItV"
+}
