@@ -7,11 +7,16 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		802C79B22CAC3021006FD70E /* LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = 802C79B12CAC3021006FD70E /* LICENSE */; };
+		802C79BC2CAC309A006FD70E /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 802C79BB2CAC309A006FD70E /* MarkdownUI */; };
+		802C79BE2CAC3203006FD70E /* PRIVACY_POLICY.md in Resources */ = {isa = PBXBuildFile; fileRef = 802C79BD2CAC3203006FD70E /* PRIVACY_POLICY.md */; };
 		806BE0862CA1B3BB000E86C0 /* Aptabase in Frameworks */ = {isa = PBXBuildFile; productRef = 806BE0852CA1B3BB000E86C0 /* Aptabase */; };
 		808387CF2CA49A880094DD43 /* Blackbird in Frameworks */ = {isa = PBXBuildFile; productRef = 808387CE2CA49A880094DD43 /* Blackbird */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		802C79B12CAC3021006FD70E /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
+		802C79BD2CAC3203006FD70E /* PRIVACY_POLICY.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = PRIVACY_POLICY.md; sourceTree = "<group>"; };
 		806BE04C2CA1A995000E86C0 /* ACS Contacts.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "ACS Contacts.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -28,6 +33,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				802C79BC2CAC309A006FD70E /* MarkdownUI in Frameworks */,
 				806BE0862CA1B3BB000E86C0 /* Aptabase in Frameworks */,
 				808387CF2CA49A880094DD43 /* Blackbird in Frameworks */,
 			);
@@ -39,8 +45,10 @@
 		806BE0432CA1A995000E86C0 = {
 			isa = PBXGroup;
 			children = (
+				802C79BD2CAC3203006FD70E /* PRIVACY_POLICY.md */,
 				806BE04E2CA1A995000E86C0 /* ACS Contacts */,
 				806BE04D2CA1A995000E86C0 /* Products */,
+				802C79B12CAC3021006FD70E /* LICENSE */,
 			);
 			sourceTree = "<group>";
 		};
@@ -74,6 +82,7 @@
 			packageProductDependencies = (
 				806BE0852CA1B3BB000E86C0 /* Aptabase */,
 				808387CE2CA49A880094DD43 /* Blackbird */,
+				802C79BB2CAC309A006FD70E /* MarkdownUI */,
 			);
 			productName = "ACS Contacts";
 			productReference = 806BE04C2CA1A995000E86C0 /* ACS Contacts.app */;
@@ -106,6 +115,7 @@
 			packageReferences = (
 				806BE0842CA1B3BB000E86C0 /* XCRemoteSwiftPackageReference "aptabase-swift" */,
 				808387CD2CA49A880094DD43 /* XCRemoteSwiftPackageReference "Blackbird" */,
+				802C79BA2CAC309A006FD70E /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 806BE04D2CA1A995000E86C0 /* Products */;
@@ -122,6 +132,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				802C79B22CAC3021006FD70E /* LICENSE in Resources */,
+				802C79BE2CAC3203006FD70E /* PRIVACY_POLICY.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -269,6 +281,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "ACS-Contacts-Info.plist";
 				INFOPLIST_KEY_NSContactsUsageDescription = "ASC Contacts needs Write access to save contacts to your phone";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2024";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -299,6 +312,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "ACS-Contacts-Info.plist";
 				INFOPLIST_KEY_NSContactsUsageDescription = "ASC Contacts needs Write access to save contacts to your phone";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2024";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -341,6 +355,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		802C79BA2CAC309A006FD70E /* XCRemoteSwiftPackageReference "swift-markdown-ui" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/gonzalezreal/swift-markdown-ui";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.4.0;
+			};
+		};
 		806BE0842CA1B3BB000E86C0 /* XCRemoteSwiftPackageReference "aptabase-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/aptabase/aptabase-swift";
@@ -360,6 +382,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		802C79BB2CAC309A006FD70E /* MarkdownUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 802C79BA2CAC309A006FD70E /* XCRemoteSwiftPackageReference "swift-markdown-ui" */;
+			productName = MarkdownUI;
+		};
 		806BE0852CA1B3BB000E86C0 /* Aptabase */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 806BE0842CA1B3BB000E86C0 /* XCRemoteSwiftPackageReference "aptabase-swift" */;

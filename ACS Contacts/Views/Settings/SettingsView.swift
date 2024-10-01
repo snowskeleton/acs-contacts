@@ -17,16 +17,16 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             List {
-//                Section {
-//                    NavigationLink {
-//                        AboutView()
-//                    } label: {
-//                        HStack {
-//                            Image(systemName: "list.clipboard")
-//                            Text("About")
-//                        }
-//                    }
-//                }
+                Section {
+                    NavigationLink {
+                        AboutView()
+                    } label: {
+                        HStack {
+                            Image(systemName: "list.clipboard")
+                            Text("About")
+                        }
+                    }
+                }
                 
                 Section {
                     NavigationLink {
