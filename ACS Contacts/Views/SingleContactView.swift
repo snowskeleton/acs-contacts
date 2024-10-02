@@ -66,6 +66,28 @@ struct SingleContactView: View {
                 }
                 .padding()
                 List {
+                    if let firstName = contact.firstName, !firstName.isEmpty {
+                        Section {
+                            Text(firstName)
+                        }
+                    }
+                    if let middleName = contact.middleName, !middleName.isEmpty {
+                        Section {
+                            Text(middleName)
+                        }
+                    }
+                    if let lastName = contact.lastName, !lastName.isEmpty {
+                        Section {
+                            Text(lastName)
+                        }
+                    }
+                    if let friendlyName = contact.friendlyName,
+                       !friendlyName.isEmpty,
+                       friendlyName != contact.displayName {
+                        Section {
+                            Text(friendlyName)
+                        }
+                    }
                     if let dateOfBirth = contact.dateOfBirth, !dateOfBirth.isEmpty {
                         Section("Birthday") {
                             Text("Date of Birth: \(dateOfBirth)")
