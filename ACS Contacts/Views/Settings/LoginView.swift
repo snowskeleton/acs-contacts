@@ -9,7 +9,6 @@ import SwiftUI
 
 struct LoginView: View {
     @Environment(\.presentationMode) var mode
-    @State private var loggedIn = false
     @State private var showLogoutSuccessful = false
     
     @ObservedObject private var userManager = UserManager.shared
@@ -45,7 +44,7 @@ struct LoginView: View {
                     .disabled(requiredFieldsEmpty)
             }
             
-            if !email.isEmpty && !password.isEmpty {
+            if (userManager.currentUser?.loggedIn ?? true) || email == AppStoreTesting.testString {
                 HStack {
                     Image(systemName: "arrow.left.circle")
                     Button("Logout", role: .destructive) {
@@ -59,31 +58,6 @@ struct LoginView: View {
                     )
                 }
             }
-            
-            if email == AppStoreTesting.testString {
-                Button("Create fake data") {
-                    Task {
-                        isTesting = true
-                        showProgressView = true
-                        await contactsFromJson()
-                        alertTitle = "Fake data created"
-                        alertMessage = ""
-                        showAlert = true
-                        showProgressView = false
-                        
-                    }
-                }
-            }
-            
-            //            Section {
-            //                if email.lowercased() == AppStoreTesting.testString {
-            //                    NavigationLink {
-            //                        CreateFakeEventView()
-            //                    } label: {
-            //                        Text("Create data for testing")
-            //                    }
-            //                }
-            //            }
         }
         .alert(isPresented: $showAlert) {
             Alert(
@@ -105,6 +79,14 @@ struct LoginView: View {
     
     fileprivate func login() {
         Task {
+            if email == AppStoreTesting.testString {
+                isTesting = true
+                showProgressView = true
+                await contactsFromJson()
+                showProgressView = false
+                mode.wrappedValue.dismiss()
+            }
+            
             showProgressView = true
             let authTokens = await ACSService().login(email, password)
             switch authTokens {
