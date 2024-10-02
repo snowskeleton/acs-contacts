@@ -98,9 +98,7 @@ struct SingleContactView: View {
                         Section("Phone\(phones.results.count > 1 ? "s" : "")") {
                             ForEach(phones.results, id: \.self) { phone in
                                 if let number = phone.phoneNumber {
-                                    Button {
-                                        UIPasteboard.general.string = number
-                                    } label: {
+                                    Link(destination: URL(string: "imessage://\(number)")!) {
                                         HStack {
                                             Text(number)
                                             Spacer()
