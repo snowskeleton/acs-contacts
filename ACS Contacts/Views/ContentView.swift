@@ -15,12 +15,14 @@ struct ContentView: View {
 
     var body: some View {
         TabView {
-            Tab("Contacts", systemImage: "person.crop.circle") {
-                AllContactsView()
-            }
-            Tab("Settings", systemImage: "gear.circle") {
-                SettingsView()
-            }
+            AllContactsView()
+                .tabItem {
+                    Label("Contacts", systemImage: "person.crop.circle")
+                }
+            SettingsView()
+                .tabItem {
+                    Label("Settings", systemImage: "gear.circle")
+                }
         }
         .onAppear {
             loggedIn = !(userManager.currentUser?.loggedIn ?? true)
