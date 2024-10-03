@@ -171,7 +171,6 @@ extension Contact {
     static public func updateAll(_ db: Blackbird.Database, _ contacts: [Contact]) async {
         if let siteNumber = UserDefaults.standard.string(forKey: "siteNumber") {
             for contact in contacts {
-                print(contact.firstName)
                 let result = await ACSService().getIndividualContact(siteNumber: siteNumber, indvId: contact.indvId.description)
                 
                 switch result {
