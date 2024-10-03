@@ -32,11 +32,9 @@ struct LoginView: View {
     
     var body: some View {
         List {
-            Section {
+            Section("ACS/Realm Login Info") {
                 TextField("Email", text: $email)
                 SecureField("Password", text: $password)
-            } header: {
-                Text("Email and password")
             }
             
             Section {
