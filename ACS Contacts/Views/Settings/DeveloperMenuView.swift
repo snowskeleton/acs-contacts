@@ -9,7 +9,6 @@ import SwiftUI
 import SwiftData
 
 struct DeveloperMenuView: View {
-    @Environment(\.modelContext) private var context
     @Environment(\.blackbirdDatabase) var db
 
     @State private var showCrashConfirmation = false

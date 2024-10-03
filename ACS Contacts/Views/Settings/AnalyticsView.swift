@@ -38,18 +38,20 @@ struct AnalyticsView: View {
                 Text("\(disableAnalytics ? "No" : "Only") app usage is tracked. No personally identifible information is saved. No information is sold to or used by third parties.")
             }
             
-            if !disableAnalytics {
-                Section {
-                    TextField("Tracking ID", text: $optInTrackingIdentifier)
-                        .onChange(of: optInTrackingIdentifier) {
-                            if let expiryDate = Calendar.current.date(byAdding: .day, value: 2, to: Date()) {
-                                optInTrackingIdentifierExpiryTimestamp = expiryDate.timeIntervalSince1970
+            if #available(iOS 17, *) {
+                if !disableAnalytics {
+                    Section {
+                        TextField("Tracking ID", text: $optInTrackingIdentifier)
+                            .onChange(of: optInTrackingIdentifier) {
+                                if let expiryDate = Calendar.current.date(byAdding: .day, value: 2, to: Date()) {
+                                    optInTrackingIdentifierExpiryTimestamp = expiryDate.timeIntervalSince1970
+                                }
                             }
-                        }
-                } header: {
-                    Text("Opt-In Tracking")
-                } footer: {
-                    Text("Only enter an identifier in here if provided one by the app developer to help troubleshoot a specific issue. This identifier will uniquely identify you and your app's usage. Analytics must be enabled for this to work. This identifier is cleared automatically after 2 days. No info is sold to or used by third parties.")
+                    } header: {
+                        Text("Opt-In Tracking")
+                    } footer: {
+                        Text("Only enter an identifier in here if provided one by the app developer to help troubleshoot a specific issue. This identifier will uniquely identify you and your app's usage. Analytics must be enabled for this to work. This identifier is cleared automatically after 2 days. No info is sold to or used by third parties.")
+                    }
                 }
             }
         }

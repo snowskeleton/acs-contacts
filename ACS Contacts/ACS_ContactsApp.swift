@@ -26,7 +26,7 @@ struct ACS_ContactsApp: App {
             ContentView()
         }
         .environment(\.blackbirdDatabase, databaseManager.database)
-        .onChange(of: phase) { _, newPhase in
+        .onChange(of: phase) { newPhase in
             if newPhase == .background {
                 Task {
                     scheduleAppRefresh()

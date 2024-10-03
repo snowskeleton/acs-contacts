@@ -12,7 +12,6 @@ import Blackbird
 
 
 struct AllContactsView: View {
-    @Environment(\.modelContext) private var context
     @Environment(\.blackbirdDatabase) var db
     
     @State private var searchText: String = ""
