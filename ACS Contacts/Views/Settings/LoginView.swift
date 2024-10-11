@@ -77,14 +77,13 @@ struct LoginView: View {
     
     fileprivate func login() {
         Task {
-            if Config.appConfiguration != .AppStore {
-                if email.lowercased() == AppStoreTesting.testString.lowercased() {
-                    isTesting = true
-                    showProgressView = true
-                    await contactsFromJson()
-                    showProgressView = false
-                    mode.wrappedValue.dismiss()
-                }
+            if email.lowercased() == AppStoreTesting.testString.lowercased() {
+                isTesting = true
+                showProgressView = true
+                await contactsFromJson()
+                showProgressView = false
+                mode.wrappedValue.dismiss()
+                return
             }
             
             showProgressView = true
