@@ -6,8 +6,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/aptabase/aptabase-swift",
       "state" : {
-        "revision" : "73579250784f7040aad28ec376a0ddfcdaa171cf",
-        "version" : "0.3.10"
+        "revision" : "cfd67fac2a228d448d9d2ac92ffc71589cc3ef00",
+        "version" : "0.3.11"
       }
     },
     {
